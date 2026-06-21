@@ -1,0 +1,56 @@
+name: Post to Instagram
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # every 30 minutes
+  workflow_dispatch:        # manual trigger from GitHub UI
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download fonts
+        run: python setup.py
+
+      - name: Run pipeline
+        env:
+          GEMINI_API_KEY:           ${{ secrets.GEMINISECRET }}
+          GROQ_API_KEY:             ${{ secrets.GROKSECRET }}
+          HF_API_TOKEN:             ${{ secrets.HFSECRET }}
+          INSTAGRAM_USERNAME:       ${{ secrets.INSTAUSERNAMESECRET }}
+          QUOTE_CATEGORY:           "mindset,growth,love,resilience,courage,success,peace,wisdom"
+          POST_INTERVAL_HOURS:      "1"
+          IG_USER_ID:               ${{ secrets.IGUSERIDSECRET }}
+          IG_ACCESS_TOKEN:          ${{ secrets.IGACCESSTOKENSECRET }}
+          IG_APP_SECRET:            ${{ secrets.IGAPPSECRET }}
+          IMGBB_API_KEY:            ${{ secrets.IMGBBKEYSECRET }}
+          CLOUDINARY_CLOUD_NAME:    ${{ secrets.CLOUDINARYNAME }}
+          CLOUDINARY_API_KEY:       ${{ secrets.CLOUDINARYKEY }}
+          CLOUDINARY_API_SECRET:    ${{ secrets.CLOUDINARYSECRET }}
+        run: python main.py --once
+
+      - name: Save history files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mood_history.json music_history.json template_history.json || true
+          git diff --cached --quiet || (git commit -m "chore: update history after run [skip ci]" && git push)

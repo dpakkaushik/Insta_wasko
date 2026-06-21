@@ -1,0 +1,7 @@
+.env
+ig_token.json
+instagram_cookies.json
+output/
+__pycache__/
+*.pyc
+chrome_profile/
