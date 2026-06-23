@@ -144,16 +144,7 @@ def generate_carousel(category: str, gender: str, language: str = "english") -> 
             else:
                 print(f"  [gemini] Error ({exc.__class__.__name__}: {err[:80]}) — retrying...")
 
-    # Gemini exhausted — try Groq as fallback
-    print("  [groq] Gemini exhausted — attempting Groq fallback...")
-    try:
-        groq_prompt = _load_prompt(category, gender, language, variant="groq")
-        data = _call_groq(groq_prompt)
-        wc, _ = _krishna_word_count(data, "groq")
-        print(f"  [groq] Fallback OK ({wc}w)")
-        return data
-    except Exception as exc:
-        raise RuntimeError(
-            f"Quote generation failed: Gemini exhausted, Groq fallback also failed ({exc}). "
-            "Check API keys or wait for rate limits to clear."
-        )
+    raise RuntimeError(
+        "Quote generation failed after 5 Gemini attempts. "
+        "Check GEMINI_API_KEY or wait for rate limit to clear."
+    )

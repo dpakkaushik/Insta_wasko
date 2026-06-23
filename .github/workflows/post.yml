@@ -31,7 +31,6 @@ jobs:
       - name: Run pipeline
         env:
           GEMINI_API_KEY:           ${{ secrets.GEMINISECRET }}
-          GROQ_API_KEY:             ${{ secrets.GROKSECRET }}
           INSTAGRAM_USERNAME:       ${{ secrets.INSTAUSERNAMESECRET }}
           IG_USER_ID:               ${{ secrets.IGUSERIDSECRET }}
           IG_ACCESS_TOKEN:          ${{ secrets.IGACCESSTOKENSECRET }}
