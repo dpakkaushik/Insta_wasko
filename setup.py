@@ -47,7 +47,7 @@ if __name__ == "__main__":
     download_fonts()
     check_env()
     print("\nSetup complete. Next steps:")
-    print("  1. Edit .env with your GEMINI_API_KEY, INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD")
+    print("  1. Edit .env with your API keys and Instagram credentials")
     print("  2. pip install -r requirements.txt")
     print("  3. python main.py --dry     # test without posting")
     print("  4. python main.py --once    # run once and post")

@@ -1,12 +1,9 @@
 """
 Instagram poster — Official Instagram Content Publishing API.
-
-Supports:
-  - post_image(image_path, caption)  → single photo post via imgbb
-  - post_reel(video_path, caption)   → Reel via Cloudinary + Graph API
+Posts Reels via Cloudinary (video host) + Instagram Graph API.
 
 Token management:
-  - Short-lived token (from .env) is stored with a 60-day estimate on first run
+  - Token from .env is stored with a 60-day estimate on first run
   - Auto-refreshed when < 7 days remain
 """
 
@@ -19,17 +16,13 @@ import requests
 
 from config import (
     IG_USER_ID, IG_ACCESS_TOKEN, IG_APP_SECRET,
-    IMGBB_API_KEY, INSTAGRAM_USERNAME,
+    INSTAGRAM_USERNAME,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET,
 )
 
 GRAPH      = "https://graph.instagram.com/v21.0"
 TOKEN_FILE = Path("ig_token.json")
 
-
-# ---------------------------------------------------------------------------
-# Token management
-# ---------------------------------------------------------------------------
 
 def _exchange_token(short_token: str) -> dict:
     r = requests.get(
@@ -81,9 +74,9 @@ def _get_token() -> str:
             except Exception as exc:
                 print(f"[token] Refresh failed ({exc}) — using existing token")
                 return token
-        print("[token] Token may be expired — update IG_ACCESS_TOKEN in secrets and re-run")
+        print("[token] Token may be expired — update IG_ACCESS_TOKEN in .env and re-run")
 
-    print("[token] Saving token from secrets (valid ~60 days)...")
+    print("[token] Saving token from .env (valid ~60 days)...")
     stored = {
         "access_token": IG_ACCESS_TOKEN,
         "expires_at":   (datetime.now() + timedelta(days=60)).isoformat(),
@@ -92,36 +85,8 @@ def _get_token() -> str:
     return IG_ACCESS_TOKEN
 
 
-# ---------------------------------------------------------------------------
-# Image hosting (imgbb)
-# ---------------------------------------------------------------------------
-
-def _host_image(image_path: str) -> str:
-    key = IMGBB_API_KEY.strip()
-    file_size = Path(image_path).stat().st_size
-    print(f"  [imgbb] Uploading {Path(image_path).name} ({file_size/1024:.0f} KB)...")
-    with open(image_path, "rb") as f:
-        r = requests.post(
-            "https://api.imgbb.com/1/upload",
-            params={"key": key},
-            files={"image": ("image.jpg", f, "image/jpeg")},
-            timeout=60,
-        )
-    if not r.ok:
-        raise RuntimeError(
-            f"[imgbb] Upload failed ({r.status_code}): {r.text[:400]}\n"
-            "Check IMGBB_API_KEY in secrets."
-        )
-    url = r.json()["data"]["url"]
-    print(f"  [imgbb] URL: {url[:70]}...")
-    return url
-
-
-# ---------------------------------------------------------------------------
-# Video hosting (Cloudinary)
-# ---------------------------------------------------------------------------
-
-def _host_video(video_path: str) -> str:
+def _host_video(video_path: str) -> tuple[str, str]:
+    """Upload video to Cloudinary. Returns (secure_url, public_id)."""
     try:
         import cloudinary
         import cloudinary.uploader
@@ -140,73 +105,24 @@ def _host_video(video_path: str) -> str:
     file_size = Path(video_path).stat().st_size
     print(f"  [cloudinary] Uploading {Path(video_path).name} ({file_size/1024/1024:.1f} MB)...")
     try:
-        result = cloudinary.uploader.upload(video_path, resource_type="video")
+        result = cloudinary.uploader.upload(
+            video_path,
+            resource_type="video",
+            folder="insta_radha/reels",
+        )
     except Exception as exc:
         raise RuntimeError(
             f"[cloudinary] Upload failed: {type(exc).__name__}: {exc}\n"
-            "Check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in secrets."
+            "Check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET."
         ) from exc
 
     url = result["secure_url"]
+    public_id = result["public_id"]
     print(f"  [cloudinary] URL: {url[:70]}...")
-    return url
+    return url, public_id
 
 
-# ---------------------------------------------------------------------------
-# Post: single photo
-# ---------------------------------------------------------------------------
 
-def post_image(image_path: str, caption: str) -> str:
-    token = _get_token()
-    image_url = _host_image(image_path)
-
-    print(f"  [instagram] Creating photo container (user_id={IG_USER_ID})...")
-    r = requests.post(
-        f"{GRAPH}/{IG_USER_ID}/media",
-        params={
-            "image_url":    image_url,
-            "caption":      caption[:2200],
-            "access_token": token,
-        },
-        timeout=30,
-    )
-    if not r.ok:
-        raise RuntimeError(
-            f"[instagram] Create photo container failed ({r.status_code}): {r.json()}"
-        )
-    container_id = r.json()["id"]
-    print(f"  [instagram] Container: {container_id}")
-
-    for attempt in range(20):
-        time.sleep(4)
-        status_data = requests.get(
-            f"{GRAPH}/{container_id}",
-            params={"fields": "status_code", "access_token": token},
-            timeout=10,
-        ).json()
-        status = status_data.get("status_code", "IN_PROGRESS")
-        print(f"  [instagram] Status: {status} (attempt {attempt + 1}/20)")
-        if status == "FINISHED":
-            break
-        if status == "ERROR":
-            raise RuntimeError(f"[instagram] Container processing failed: {status_data}")
-    else:
-        raise RuntimeError("[instagram] Container processing timed out after 80s")
-
-    r = requests.post(
-        f"{GRAPH}/{IG_USER_ID}/media_publish",
-        params={"creation_id": container_id, "access_token": token},
-        timeout=30,
-    )
-    r.raise_for_status()
-    url = f"https://www.instagram.com/{INSTAGRAM_USERNAME}/"
-    print(f"[instagram] Photo live -> {url}")
-    return url
-
-
-# ---------------------------------------------------------------------------
-# Post: Reel
-# ---------------------------------------------------------------------------
 
 def _create_reel_container(token: str, video_url: str, caption: str, audio_name: str | None) -> str:
     params: dict = {
@@ -227,29 +143,26 @@ def _create_reel_container(token: str, video_url: str, caption: str, audio_name:
 
 
 def post_reel(video_path: str, caption: str, audio_name: str | None = None) -> str:
-    token     = _get_token()
-    video_url = _host_video(video_path)
+    token              = _get_token()
+    video_url, _ = _host_video(video_path)
 
-    # Try track name first, then fall back to no audio
     container_id: str | None = None
     for audio in ([audio_name] if audio_name else []) + [None]:
         label = f'"{audio}"' if audio else "no audio"
         print(f"  [instagram] Creating Reel container — audio: {label}...")
         try:
             container_id = _create_reel_container(token, video_url, caption, audio)
-            print(f"  [instagram] Reel container: {container_id}")
+            print(f"  [instagram] Container: {container_id}")
             break
         except RuntimeError as exc:
-            err_text = str(exc).lower()
-            if "audio" in err_text and audio is not None:
-                print(f"  [instagram] Audio {label} not accepted → trying next...")
+            if "audio" in str(exc).lower() and audio is not None:
+                print(f"  [instagram] Audio {label} not accepted — trying without...")
                 continue
-            raise  # non-audio error — propagate immediately
+            raise
 
     if container_id is None:
-        raise RuntimeError("[instagram] Could not create Reel container with any audio option")
+        raise RuntimeError("[instagram] Could not create Reel container")
 
-    # Video processing takes longer than photos — poll up to 5 minutes
     for attempt in range(30):
         time.sleep(10)
         status_data = requests.get(
@@ -258,18 +171,17 @@ def post_reel(video_path: str, caption: str, audio_name: str | None = None) -> s
             timeout=10,
         ).json()
         status = status_data.get("status_code", "IN_PROGRESS")
-        print(f"  [instagram] Reel status: {status} (attempt {attempt + 1}/30)")
+        print(f"  [instagram] Status: {status} (attempt {attempt + 1}/30)")
         if status == "FINISHED":
             break
         if status == "ERROR":
             raise RuntimeError(
                 f"[instagram] Reel processing failed: {status_data}\n"
-                "Check video format: must be MP4, H.264, 3–90s, 9:16 or 4:5 aspect ratio."
+                "Check video format: MP4, H.264, 3-90s, 9:16 aspect ratio."
             )
     else:
         raise RuntimeError(
-            "[instagram] Reel processing timed out after 300s — "
-            "video may still be processing; check Instagram manually."
+            "[instagram] Reel processing timed out after 300s — check Instagram manually."
         )
 
     r = requests.post(
@@ -279,8 +191,9 @@ def post_reel(video_path: str, caption: str, audio_name: str | None = None) -> s
     )
     if not r.ok:
         raise RuntimeError(
-            f"[instagram] Publish Reel failed ({r.status_code}): {r.json()}"
+            f"[instagram] Publish failed ({r.status_code}): {r.json()}"
         )
+
     url = f"https://www.instagram.com/{INSTAGRAM_USERNAME}/"
     print(f"[instagram] Reel live -> {url}")
     return url

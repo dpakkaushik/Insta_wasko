@@ -10,44 +10,44 @@ import random
 from pathlib import Path
 
 SLIDE_DURATION      = 3.0
-MUSIC_DIR           = Path("music")
+AUDIO_DIR           = Path("audio")
 OUTPUT_FPS          = 30
-MUSIC_HISTORY_FILE  = Path("music_history.json")
-MUSIC_NO_REPEAT     = 3
+AUDIO_HISTORY_FILE  = Path("audio_history.json")
+AUDIO_NO_REPEAT     = 3
 
 
-def _load_music_history() -> list[str]:
-    if MUSIC_HISTORY_FILE.exists():
-        return json.loads(MUSIC_HISTORY_FILE.read_text())
+def _load_audio_history() -> list[str]:
+    if AUDIO_HISTORY_FILE.exists():
+        return json.loads(AUDIO_HISTORY_FILE.read_text())
     return []
 
 
-def _save_music_history(track_name: str) -> None:
-    history = _load_music_history()
+def _save_audio_history(track_name: str) -> None:
+    history = _load_audio_history()
     history.insert(0, track_name)
-    MUSIC_HISTORY_FILE.write_text(json.dumps(history[:MUSIC_NO_REPEAT]))
+    AUDIO_HISTORY_FILE.write_text(json.dumps(history[:AUDIO_NO_REPEAT]))
 
 
-def _pick_music() -> str | None:
-    if not MUSIC_DIR.exists():
-        print("  [video] music/ folder not found — posting silent")
+def _pick_audio() -> str | None:
+    if not AUDIO_DIR.exists():
+        print("  [video] audio/ folder not found — posting silent")
         return None
     tracks = (
-        list(MUSIC_DIR.glob("*.mp3"))
-        + list(MUSIC_DIR.glob("*.m4a"))
-        + list(MUSIC_DIR.glob("*.wav"))
+        list(AUDIO_DIR.glob("*.mp3"))
+        + list(AUDIO_DIR.glob("*.m4a"))
+        + list(AUDIO_DIR.glob("*.wav"))
     )
     if not tracks:
-        print("  [video] No audio files in music/ — posting silent")
+        print("  [video] No audio files in audio/ — posting silent")
         return None
-    history  = _load_music_history()
-    excluded = set(history[:MUSIC_NO_REPEAT])
+    history  = _load_audio_history()
+    excluded = set(history[:AUDIO_NO_REPEAT])
     pool     = [t for t in tracks if t.name not in excluded]
     if not pool:
         pool = tracks
     chosen = random.choice(pool)
-    _save_music_history(chosen.name)
-    print(f"  [video] Music: {chosen.name}")
+    _save_audio_history(chosen.name)
+    print(f"  [video] Audio: {chosen.name}")
     return str(chosen)
 
 
@@ -71,19 +71,19 @@ def compose_reel(image_paths: list[str], output_path: str, duration: float | Non
         clips = [ImageClip(p).set_duration(slide_dur) for p in image_paths]
         video = concatenate_videoclips(clips, method="compose")
 
-        music_path = _pick_music()
-        if music_path:
+        audio_path = _pick_audio()
+        if audio_path:
             try:
                 from moviepy.audio.AudioClip import concatenate_audioclips
-                audio = AudioFileClip(music_path)
+                audio = AudioFileClip(audio_path)
                 if audio.duration < video.duration:
                     loops = int(video.duration / audio.duration) + 1
                     audio = concatenate_audioclips([audio] * loops)
                 audio = audio.subclip(0, video.duration).audio_fadeout(1.0)
                 video = video.set_audio(audio)
-                track_name = Path(music_path).stem  # filename without extension
+                track_name = Path(audio_path).stem  # filename without extension
             except Exception as exc:
-                print(f"  [video] WARNING: Could not load music ({exc}) — posting silent")
+                print(f"  [video] WARNING: Could not load audio ({exc}) — posting silent")
 
         video.write_videofile(
             output_path,

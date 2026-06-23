@@ -2,6 +2,11 @@
 ig_token.json
 instagram_cookies.json
 output/
+templates/
+category_history.json
+template_history.json
+audio_history.json
 __pycache__/
 *.pyc
 chrome_profile/
+ruvector.db
