@@ -22,7 +22,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 from config import POST_INTERVAL_HOURS
 from caption_generator import generate_caption_for_oneliner
-from image_composer import compose_card, make_gradient_bg
+from image_composer import compose_card
 from video_composer import compose_reel, compose_reel_with_video_bg
 from instagram_poster import post_reel
 
@@ -181,12 +181,11 @@ def run_pipeline() -> None:
         print(f"  CTA     : {cta[:60]}")
         print(f"  Hashtags: {niche_ht} {mid_ht} {broad_ht}")
 
-        # STEP 3 — compose text card on gradient background
-        print("\n[3/4] Composing card...")
-        bg_image  = make_gradient_bg()
-        card      = compose_card(quote=text, font_color=font_color, bg_image=bg_image)
-        card_path = str(OUTPUT_DIR / f"card_{run_id}.jpg")
-        card.save(card_path, "JPEG", quality=95)
+        # STEP 3 — render text as transparent PNG overlay
+        print("\n[3/4] Composing text overlay...")
+        card      = compose_card(quote=text, font_color=font_color)
+        card_path = str(OUTPUT_DIR / f"card_{run_id}.png")
+        card.save(card_path, "PNG")
         print(f"  Saved: {Path(card_path).name}")
 
         # STEP 4 — compose reel (video bg if available) + post

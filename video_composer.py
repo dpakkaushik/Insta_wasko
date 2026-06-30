@@ -152,7 +152,7 @@ def compose_reel_with_video_bg(
         y1    = (bg.h - TARGET_H) // 2
         bg    = bg.crop(x1=x1, y1=y1, x2=x1 + TARGET_W, y2=y1 + TARGET_H)
 
-        card_clip = ImageClip(card_path).set_opacity(0.80).set_duration(duration)
+        card_clip = ImageClip(card_path, ismask=False).set_duration(duration)
         final     = CompositeVideoClip([bg, card_clip])
 
         # Build audio: bg original sound + random music sample
