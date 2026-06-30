@@ -10,6 +10,11 @@ import json
 import random
 from pathlib import Path
 
+# moviepy 1.x uses PIL.Image.ANTIALIAS which was removed in Pillow 10
+import PIL.Image
+if not hasattr(PIL.Image, "ANTIALIAS"):
+    PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
+
 OUTPUT_FPS         = 30
 AUDIO_DIR          = Path("audio")
 AUDIO_HISTORY_FILE = Path("audio_history.json")
