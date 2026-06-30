@@ -38,17 +38,17 @@ def compose_card(quote: str, font_color: tuple, **kwargs) -> Image.Image:
     draw   = ImageDraw.Draw(canvas)
 
     is_hindi = bool(re.search(r"[ऀ-ॿ]", quote))
-    font     = _load_font("NotoSansDevanagari.ttf" if is_hindi else "Lato-Bold.ttf", 52)
+    font     = _load_font("NotoSansDevanagari.ttf" if is_hindi else "Poppins-Bold.ttf", 52)
 
     lines  = _wrap_text(draw, quote, font)
     line_h = 74
     y      = Y_START
 
     for line in lines:
-        # thick shadow for readability on any video background
+        # white shadow so black text reads on dark backgrounds too
         for dx, dy in [(-3,-3),(3,-3),(-3,3),(3,3),(0,4),(4,0),(-4,0),(0,-4)]:
-            draw.text((X_MARGIN + dx, y + dy), line, font=font, fill=(0, 0, 0, 200))
-        draw.text((X_MARGIN, y), line, font=font, fill=(*font_color, 255))
+            draw.text((X_MARGIN + dx, y + dy), line, font=font, fill=(255, 255, 255, 220))
+        draw.text((X_MARGIN, y), line, font=font, fill=(0, 0, 0, 255))
         y += line_h
 
     return canvas

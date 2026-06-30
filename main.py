@@ -105,27 +105,28 @@ def _get_next_oneliner(
     index_file: Path,
     category_map: dict,
 ) -> tuple[int, str, str]:
-    """Return (number, category, text) for the next sequential one-liner."""
+    """Return (number, category, text) — random pick from unused, resets when all done."""
     index_data = {}
     if index_file.exists():
         index_data = json.loads(index_file.read_text())
 
-    last_used = index_data.get("last_used", 0)
+    used      = set(index_data.get("used", []))
     oneliners = _load_oneliners(oneliner_file, category_map)
 
     if not oneliners:
         raise RuntimeError(f"No one-liners found in {oneliner_file}")
 
-    all_nums  = sorted(oneliners.keys())
-    remaining = [n for n in all_nums if n > last_used]
+    all_nums  = list(oneliners.keys())
+    remaining = [n for n in all_nums if n not in used]
 
     if not remaining:
-        next_num = all_nums[0]
-        print(f"  [oneliner] List complete — wrapping around to #{all_nums[0]}")
-    else:
-        next_num = remaining[0]
+        used = set()
+        remaining = all_nums
+        print(f"  [oneliner] All done — reshuffling from scratch")
 
-    index_file.write_text(json.dumps({"last_used": next_num}))
+    next_num = random.choice(remaining)
+    used.add(next_num)
+    index_file.write_text(json.dumps({"used": sorted(used)}))
     entry = oneliners[next_num]
     return next_num, entry["category"], entry["text"]
 
@@ -149,15 +150,12 @@ def run_pipeline() -> None:
     ts     = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    gender     = random.choice(["male", "female"])
+    gender     = "female"
     cfg     = GENDER_CONFIG[gender]
     cat_map = MALE_CATEGORY_MAP if gender == "male" else FEMALE_CATEGORY_MAP
-    lighting = random.choice(["light", "dark"])
-    font_color = (30, 30, 30) if lighting == "light" else (245, 245, 245)
-
     print(f"\n{'='*60}")
     print(f"  Waskodigama Comedy Reel Pipeline — {ts}")
-    print(f"  Gender : {gender}  |  Lighting: {lighting}  |  Dry run: {DRY_RUN}")
+    print(f"  Gender : {gender}  |  Dry run: {DRY_RUN}")
     print(f"{'='*60}")
 
     try:
@@ -183,7 +181,7 @@ def run_pipeline() -> None:
 
         # STEP 3 — render text as transparent PNG overlay
         print("\n[3/4] Composing text overlay...")
-        card      = compose_card(quote=text, font_color=font_color)
+        card      = compose_card(quote=text, font_color=(0, 0, 0))
         card_path = str(OUTPUT_DIR / f"card_{run_id}.png")
         card.save(card_path, "PNG")
         print(f"  Saved: {Path(card_path).name}")
