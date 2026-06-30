@@ -1,0 +1,81 @@
+# Female One-Liner Content Bank — Waskodigama
+
+---
+
+## 💸 Girl Math & Shopping Delusions
+
+1. Rs. 100 ka shipping charge dena paap hai, par free shipping ke liye Rs. 1,000 ka useless saaman khareedna 'Girl Math' hai.
+2. Cash se pay kiya toh technically it's free, kyunki bank se koi message nahi aaya.
+3. Return policy 30 days ki hoti hai, aur main 29th day pe panic attack ke saath parcel pack karti hoon.
+4. "I have nothing to wear" bolte waqt main literally apne kapdon ke pahad pe baithi hoti hoon.
+5. Zara ki sale meri mental health aur bank balance, dono ke liye ek international threat hai.
+6. Shopping cart mein items add karna meri free therapy hai, unko buy karna mera trauma.
+7. Kapde pehnne se pehle main mirror mein fashion influencer hoti hoon, bahar nikalte hi homeless lagti hoon.
+8. Comfortable shoes ache nahi lagte aur ache shoes comfort ke dushman hain — meri zindagi ka sabse bada struggle.
+9. "Main paise bachaungi" — yeh promise main Myntra app open karte waqt khud se karti hoon.
+
+---
+
+## 💅 Skincare, Makeup & The Messy Bun
+
+10. 10-step 'glass skin' routine karti hoon, aur phir raat ko bina makeup hataye so jaati hoon.
+11. Mere paas 40 lipsticks hain, par main lagati wahi ek ghis chuki brown shade hoon.
+12. Eyeliner dono aankhon pe same lag jaye, iske liye direct bhagwaan se Wi-Fi connection chahiye.
+13. "Hair wash day" meri life ka sabse bada logistical event hota hai, mera poora week iske hisaab se plan hota hai.
+14. Skincare pe poori salary uda kar, bahar jaate waqt bas sunscreen aur lip balm laga ke nikal leti hoon.
+15. Zindagi mein agar kuch genuinely satisfy karta hai, toh woh hai 'perfect messy bun' jo sirf ghar pe akele hote waqt banta hai — bahar jaane pe nahi.
+16. Mere handbag mein dhoondhne par shayad parallel universe ka rasta mil jaye, par mera favorite lip balm nahi milega.
+17. Haircut lene ke baad 2 din regret karna, aur phir "It's just hair" bolke move on karna ek tradition hai.
+18. Crop top pehnne ki khwahish aur tummy chhupane ka struggle — yeh ek endless psychological yudh hai.
+
+---
+
+## 👯 Besties, Group Chats & Gossip
+
+19. Group chat mein mere bheje hue screenshots kisi CBI investigation se kam nahi hote.
+20. Bestie ki "I need to tell you something" sun kar mera BP automatically normal se dangerous level pe chala jaata hai.
+21. Humari 10 minute ki audio note actual mein ek poori unedited True Crime podcast hoti hai.
+22. Hum dono ek hi insaan ko private tab mein stalk kar rahe the, aur usne galti se photo like kar di.
+23. Washroom akele jaana is illegal, humein group mein jaakar life decisions discuss karne hote hain.
+24. Dusri ladkiyon ko unki comments mein hype karna mera full-time unpaid job hai.
+25. Bestie ko uski date ke liye ready karna, apne aap mein ek fashion show direct karne jaisa hai.
+26. Mujhe duniya ki koi khabar nahi hoti, jab tak meri bestie mujhe poora context nahi samjhati.
+
+---
+
+## 🚩 Dating, Delulu & I Can Fix Him
+
+27. Mere red flags, colorblind logo ke liye bilkul green hain.
+28. Usne mujhe bas "Good night" bheja, aur main dimaag mein hamare future bachon ke naam sochne lagi. Delulu is the solulu.
+29. "I can fix him" bol kar main apni khud ki bachi-kuchi mental peace todne nikal jaati hoon.
+30. Horoscope match nahi kar raha tha, toh maine apna ascendant sign change karke forcefully compatibility bana li.
+31. Talking stage mein hi main itni attached ho jaati hoon jaise hamari 10th anniversary aane wali ho.
+32. Mujhe toxic launde nahi pasand, main bas unhe "misunderstood" samajh kar godh le leti hoon.
+33. Skincare routine 10-step ka hai, par toxic ex ka reply 2 micro-second mein kar deti hoon.
+34. "I'm focusing on myself" translates to "Koi dhang ka ladka nahi mil raha so main ab reels scroll karungi."
+35. Uski ek ignored reel se mujhe pata chal jaata hai ki humara future nahi hai.
+
+---
+
+## 🧠 Mood Swings, PMS & Overthinking
+
+36. Din mein "I am a boss lady", raat mein "Mujhe bas rona hai kyunki mere baal theek nahi lag rahe."
+37. Maine usse mental peace ke liye block kiya tha, ab fake account se uski story dekh rahi hoon.
+38. Periods ke time pe mera mood 15 minutes mein romantic-comedy se direct serial-killer thriller ban jaata hai.
+39. Mujhe gussa nahi aa raha tha, par usne poochh liya "Are you mad?" aur ab main officially kalesh ke mood mein hoon.
+40. Mera overthinking ka speed 5G se bhi zyada fast hai jab baat aati hai ki "Usne 'hmm' kyun bheja."
+41. "I'm fine" is actually a trap, aur jisne ispe bharosa kiya uska ant nishchit hai.
+42. Fake scenarios banate banate khud hi rone lag jaana is a highly specialized talent.
+43. Mere mood swings mere outfit par depend karte hain — agar outfit acha hai, toh main angel hoon.
+44. "Main strong, independent woman hoon" — until I see a lizard in my room, phir I need an absolute hero.
+
+---
+
+## 🏠 Adulting & Everyday Survival
+
+45. Mere room mein ek dedicated chair hai jiska sole purpose pehne hue kapdon ka pahad uthana hai.
+46. Bra ka hook kholte hi din ka jo asli aaram milta hai, woh Himalaya ke kisi dhyan mein nahi hai.
+47. Aesthetic banne ke chakkar mein meri aadhi zindagi Pinterest scroll karne mein hi nikal gayi.
+48. "I'll be ready in 5 mins" is a concept of space and time that modern science has not yet understood.
+49. Ghar pe pehnne wale kapde aur bahar pehnne wale kapdon ke beech mein "Swiggy wale ko receive karne" wale kapde alag hote hain.
+50. Mere paas har emotion, har regret, aur har breakdown ke liye ek alag Spotify playlist hai.

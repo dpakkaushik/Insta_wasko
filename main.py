@@ -1,276 +1,227 @@
 """
-Instagram Reel Pipeline — main entry point.
+Waskodigama — Instagram Comedy Reel Pipeline.
 
 Usage:
-  python main.py          # run once now, then every N hours
+  python main.py          # run once, then every N hours
   python main.py --once   # run exactly once and exit
   python main.py --dry    # generate everything, skip posting
 """
 
 import json
 import random
+import re
 import sys
 import time
-
-sys.stdout.reconfigure(encoding='utf-8')
 import traceback
 from datetime import datetime
 from pathlib import Path
 
-import io
-
-import cloudinary
-import cloudinary.api
-import requests
 import schedule
-from PIL import Image
 
-from config import (
-    POST_INTERVAL_HOURS,
-    CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET,
-)
-from gemini_processor import generate_carousel
+sys.stdout.reconfigure(encoding='utf-8')
+
+from config import POST_INTERVAL_HOURS
+from caption_generator import generate_caption_for_oneliner
 from image_composer import compose_card, make_gradient_bg
-from video_composer import compose_reel
+from video_composer import compose_reel, compose_reel_with_video_bg
 from instagram_poster import post_reel
 
-cloudinary.config(
-    cloud_name=CLOUDINARY_CLOUD_NAME,
-    api_key=CLOUDINARY_API_KEY,
-    api_secret=CLOUDINARY_API_SECRET,
-)
-
 OUTPUT_DIR = Path("output")
-AUDIO_DIR  = Path("audio")
+
 OUTPUT_DIR.mkdir(exist_ok=True)
-AUDIO_DIR.mkdir(exist_ok=True)
+Path("audio").mkdir(exist_ok=True)  # reserved for future audio use
 
-DRY_RUN = "--dry" in sys.argv
-
+DRY_RUN       = "--dry" in sys.argv
 REEL_DURATION = 30.0
 
-# ── ALL 10 categories (reference list — do not remove) ────────────────────────
-ALL_CATEGORIES = [
-    "career_and_burnout",
-    "comparison_and_timelines",
-    "heartbreak_and_letting_go",
-    "loneliness_and_isolation",
-    "overthinking_and_anxiety",
-    "failure_and_self_doubt",
-    "discipline_and_motivation",
-    "family_and_expectations",
-    "grief_and_healing",
-    "ego_and_patience",
-]
+# ── Per-gender content config ──────────────────────────────────────────────────
+GENDER_CONFIG = {
+    "male": {
+        "oneliner_file": Path("video/male/one-liners.md"),
+        "index_file":    Path("oneliner_index_male.json"),
+        "video_dir":     Path("video/male"),
+    },
+    "female": {
+        "oneliner_file": Path("video/female/one-liners.md"),
+        "index_file":    Path("oneliner_index_female.json"),
+        "video_dir":     Path("video/female"),
+    },
+}
 
-# ── ACTIVE genders — edit as you add images ───────────────────────────────────
-# Add "girl" once you have images in templates/<category>/girl/<light|dark>/
-ACTIVE_GENDERS = [
-    "boy",
-    # "girl",
-]
+# ── Category keyword → internal ID (per gender) ───────────────────────────────
+MALE_CATEGORY_MAP = {
+    "Desi Household":     "desi_household_and_relatives",
+    "Creative Breakdown": "creative_breakdown_and_editor",
+    "Group Chats":        "group_chats_and_goa_plans",
+    "Traffic":            "traffic_and_driving",
+    "Dating":             "dating_and_relationships",
+    "Online Shopping":    "online_shopping_addiction",
+    "Laziness":           "extreme_laziness_and_sleep",
+    "Gym":                "gym_diet_and_delusions",
+}
 
-# ── ACTIVE categories — edit this list as you add templates + prompts ─────────
-# Add a category here ONLY when you have:
-#   1. At least one image in templates/<category>/<gender>/<light|dark>/
-#   2. The corresponding prompts/<category>.txt file (already created for all 10)
-ACTIVE_CATEGORIES = [
-    "overthinking_and_anxiety",
-    "heartbreak_and_letting_go",
-    "career_and_burnout",
-    "comparison_and_timelines",
-    # Add more as you upload images to Cloudinary:
-    # "loneliness_and_isolation",
-    # "failure_and_self_doubt",
-    # "discipline_and_motivation",
-    # "family_and_expectations",
-    # "grief_and_healing",
-    # "ego_and_patience",
-]
-
-LANGUAGES        = ["english"]
-LANGUAGE_WEIGHTS = [100]
-
-# ── One Krishna/devotional tag always appended (rotates to stay fresh) ────────
-KRISHNA_TAG_POOL = [
-    "#Krishna",
-    "#BhagavadGita",
-    "#LordKrishna",
-    "#KrishnaQuotes",
-    "#GitaQuotes",
-    "#KrishnaWisdom",
-    "#HareKrishna",
-]
-
-# ── Viral reach hashtags — 5 picked randomly per post ────────────────────────
-VIRAL_TAG_POOL = [
-    "#Spirituality", "#Motivation", "#InspirationalQuotes",
-    "#DailyQuotes", "#MindsetQuotes", "#InnerPeace",
-    "#SpiritualAwakening", "#WisdomQuotes", "#LifeQuotes",
-    "#FaithQuotes", "#GodIsGood", "#DivineQuotes",
-    "#SoulQuotes", "#HinduWisdom", "#GitaWisdom",
-    "#PositiveVibes", "#Healing", "#Mindfulness",
-]
-
-CATEGORY_HISTORY    = Path("category_history.json")
-CATEGORY_NO_REPEAT  = 1   # just avoid repeating the same category back-to-back
-TEMPLATE_HISTORY    = Path("template_history.json")
-TEMPLATE_NO_REPEAT  = 5   # avoid reusing the same image for 5 posts
+FEMALE_CATEGORY_MAP = {
+    "Girl Math":  "girl_math_and_shopping",
+    "Shopping":   "girl_math_and_shopping",
+    "Skincare":   "skincare_and_makeup",
+    "Makeup":     "skincare_and_makeup",
+    "Besties":    "besties_and_gossip",
+    "Dating":     "dating_and_delulu",
+    "Delulu":     "dating_and_delulu",
+    "Mood":       "mood_swings_and_pms",
+    "PMS":        "mood_swings_and_pms",
+    "Adulting":   "adulting_and_survival",
+}
 
 
-def _load_category_history() -> list[str]:
-    if CATEGORY_HISTORY.exists():
-        return json.loads(CATEGORY_HISTORY.read_text())
-    return []
+
+def _load_oneliners(oneliner_file: Path, category_map: dict) -> dict[int, dict]:
+    """Parse the MD file into {number: {"category": str, "text": str}}."""
+    if not oneliner_file.exists():
+        raise FileNotFoundError(f"One-liner file not found: {oneliner_file}")
+
+    data: dict[int, dict] = {}
+    current_category = "general"
+
+    for line in oneliner_file.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            for keyword, cat_id in category_map.items():
+                if keyword in line:
+                    current_category = cat_id
+                    break
+        else:
+            m = re.match(r"^(\d+)\.\s+(.+)$", line.strip())
+            if m:
+                data[int(m.group(1))] = {
+                    "category": current_category,
+                    "text":     m.group(2).strip(),
+                }
+
+    return data
 
 
-def _save_category_history(category: str) -> None:
-    history = _load_category_history()
-    history.insert(0, category)
-    CATEGORY_HISTORY.write_text(json.dumps(history[:CATEGORY_NO_REPEAT]))
+def _get_next_oneliner(
+    oneliner_file: Path,
+    index_file: Path,
+    category_map: dict,
+) -> tuple[int, str, str]:
+    """Return (number, category, text) for the next sequential one-liner."""
+    index_data = {}
+    if index_file.exists():
+        index_data = json.loads(index_file.read_text())
+
+    last_used = index_data.get("last_used", 0)
+    oneliners = _load_oneliners(oneliner_file, category_map)
+
+    if not oneliners:
+        raise RuntimeError(f"No one-liners found in {oneliner_file}")
+
+    all_nums  = sorted(oneliners.keys())
+    remaining = [n for n in all_nums if n > last_used]
+
+    if not remaining:
+        next_num = all_nums[0]
+        print(f"  [oneliner] List complete — wrapping around to #{all_nums[0]}")
+    else:
+        next_num = remaining[0]
+
+    index_file.write_text(json.dumps({"last_used": next_num}))
+    entry = oneliners[next_num]
+    return next_num, entry["category"], entry["text"]
 
 
-def _load_template_history() -> list[str]:
-    if TEMPLATE_HISTORY.exists():
-        return json.loads(TEMPLATE_HISTORY.read_text())
-    return []
-
-
-def _save_template_history(name: str) -> None:
-    history = _load_template_history()
-    history.insert(0, name)
-    TEMPLATE_HISTORY.write_text(json.dumps(history[:TEMPLATE_NO_REPEAT]))
-
-
-def _pick_category() -> str:
-    if not ACTIVE_CATEGORIES:
-        raise RuntimeError(
-            "ACTIVE_CATEGORIES is empty. Add at least one category to main.py."
-        )
-    history  = _load_category_history()
-    excluded = set(history[:CATEGORY_NO_REPEAT])
-    pool     = [c for c in ACTIVE_CATEGORIES if c not in excluded]
-    if not pool:
-        pool = list(ACTIVE_CATEGORIES)
-    category = random.choice(pool)
-    _save_category_history(category)
-    return category
-
-
-def _list_cloudinary(prefix: str) -> list[dict]:
-    """Return all image resources under a Cloudinary prefix."""
-    resources = []
-    next_cursor = None
-    while True:
-        kwargs = {"type": "upload", "resource_type": "image",
-                  "prefix": prefix, "max_results": 500}
-        if next_cursor:
-            kwargs["next_cursor"] = next_cursor
-        result = cloudinary.api.resources(**kwargs)
-        resources.extend(result.get("resources", []))
-        next_cursor = result.get("next_cursor")
-        if not next_cursor:
-            break
-    return resources
-
-
-def _pick_template(category: str, gender: str, lighting: str) -> Image.Image:
-    """Fetch a random template image from Cloudinary."""
-    prefix = f"insta_radha/{category}/{gender}/{lighting}/"
-    candidates = _list_cloudinary(prefix)
-
-    if not candidates:
-        # Widen to any lighting under this category/gender
-        candidates = _list_cloudinary(f"insta_radha/{category}/{gender}/")
-
-    if not candidates:
-        print(f"  No templates on Cloudinary for {category}/{gender} - using gradient")
-        return make_gradient_bg()
-
-    history  = _load_template_history()
-    excluded = set(history[:TEMPLATE_NO_REPEAT])
-    pool     = [r for r in candidates if r["public_id"] not in excluded]
-    if not pool:
-        pool = candidates
-
-    chosen = random.choice(pool)
-    _save_template_history(chosen["public_id"])
-    print(f"  Template : {chosen['public_id'].split('/')[-1]}")
-
-    resp = requests.get(chosen["secure_url"], timeout=30)
-    resp.raise_for_status()
-    return Image.open(io.BytesIO(resp.content)).convert("RGB")
+def _pick_video_bg(video_dir: Path) -> str | None:
+    """Pick a random video file from the gender folder."""
+    if not video_dir.exists():
+        return None
+    vids = [
+        v for v in video_dir.iterdir()
+        if v.suffix.lower() in (".mp4", ".mov", ".avi", ".webm")
+    ]
+    if not vids:
+        return None
+    chosen = random.choice(vids)
+    print(f"  [video] Background: {chosen.name}")
+    return str(chosen)
 
 
 def run_pipeline() -> None:
-    ts      = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    run_id  = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts     = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    if not ACTIVE_GENDERS:
-        raise RuntimeError("ACTIVE_GENDERS is empty. Add 'boy' or 'girl' to main.py.")
-    gender   = random.choice(ACTIVE_GENDERS)
-    category = _pick_category()
+    gender     = random.choice(["male", "female"])
+    cfg     = GENDER_CONFIG[gender]
+    cat_map = MALE_CATEGORY_MAP if gender == "male" else FEMALE_CATEGORY_MAP
     lighting = random.choice(["light", "dark"])
-    language = random.choices(LANGUAGES, weights=LANGUAGE_WEIGHTS, k=1)[0]
     font_color = (30, 30, 30) if lighting == "light" else (245, 245, 245)
 
     print(f"\n{'='*60}")
-    print(f"  Instagram Reel Pipeline - {ts}")
-    print(f"  Category : {category}")
-    print(f"  Gender   : {gender}  |  Lighting: {lighting}  |  Language: {language}")
-    print(f"  Dry run  : {DRY_RUN}")
+    print(f"  Waskodigama Comedy Reel Pipeline — {ts}")
+    print(f"  Gender : {gender}  |  Lighting: {lighting}  |  Dry run: {DRY_RUN}")
     print(f"{'='*60}")
 
     try:
-        # STEP 1: Pick template
-        print(f"\n[1/4] Picking template ({category}/{gender}/{lighting})...")
-        bg_image = _pick_template(category, gender, lighting)
-
-        # STEP 2: Generate Q&A dialogue
-        print("\n[2/4] Generating Krishna dialogue...")
-        data = generate_carousel(category, gender, language)
-        quote = data["quote"]
-        print(f"  Category       : {data.get('category', '')}")
-        print(f"  Quote          : {quote.replace(chr(10), ' | ')}")
-        print(f"  Caption        : {data.get('caption', '')}")
-        print(f"  Hashtags       : {data.get('hashtags', '')}")
-        print(f"  Search keyword : {data.get('search_keyword', '')}")
-        print(f"  Alt text       : {data.get('alt_text', '')}")
-
-        # STEP 3: Compose card
-        print("\n[3/4] Composing card...")
-        card = compose_card(
-            quote      = quote,
-            font_color = font_color,
-            bg_image   = bg_image,
+        # STEP 1 — pick next one-liner for this gender
+        print(f"\n[1/4] Getting next one-liner ({gender})...")
+        number, category, text = _get_next_oneliner(
+            cfg["oneliner_file"], cfg["index_file"], cat_map
         )
+        print(f"  #{number} [{category}]")
+        print(f"  Text: {text[:100]}")
+
+        # STEP 2 — generate caption + hashtags via Groq
+        print("\n[2/4] Generating caption via Groq...")
+        caption_data = generate_caption_for_oneliner(text, category, number, gender)
+        hook     = caption_data.get("hook", "")
+        cta      = caption_data.get("cta", "")
+        niche_ht = caption_data.get("niche_hashtags", "")
+        mid_ht   = caption_data.get("mid_hashtags", "")
+        broad_ht = caption_data.get("broad_hashtags", "")
+        print(f"  Hook    : {hook[:80]}")
+        print(f"  CTA     : {cta[:60]}")
+        print(f"  Hashtags: {niche_ht} {mid_ht} {broad_ht}")
+
+        # STEP 3 — compose text card on gradient background
+        print("\n[3/4] Composing card...")
+        bg_image  = make_gradient_bg()
+        card      = compose_card(quote=text, font_color=font_color, bg_image=bg_image)
         card_path = str(OUTPUT_DIR / f"card_{run_id}.jpg")
         card.save(card_path, "JPEG", quality=95)
         print(f"  Saved: {Path(card_path).name}")
 
-        # STEP 4: Compose Reel + post
-        krishna_tag = random.choice(KRISHNA_TAG_POOL)
-        viral_tags = " ".join(random.sample(VIRAL_TAG_POOL, 5))
-        ig_caption = f"{data['caption']}\n\n{data['hashtags']} {krishna_tag} {viral_tags}\n\n🌸 @krishnahasyou | Hindi page: @krishnahasyou_"
-        reel_path  = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
+        # STEP 4 — compose reel (video bg if available) + post
+        # Caption: hook → CTA → 9 hashtags (3 niche + 3 mid + 3 broad) → #N
+        ig_caption = (
+            f"{hook}\n\n"
+            f"{cta}\n\n"
+            f"{niche_ht} {mid_ht} {broad_ht}\n\n"
+            f"#{number}"
+        )
+        reel_path = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
+        video_bg  = _pick_video_bg(cfg["video_dir"])
 
         print("\n[4/4] Composing Reel video...")
-        reel_path, track_name = compose_reel([card_path], reel_path, duration=REEL_DURATION)
+        if video_bg:
+            reel_path, _ = compose_reel_with_video_bg(
+                card_path, video_bg, reel_path, duration=REEL_DURATION
+            )
+        else:
+            print("  No video background found — using gradient card only")
+            reel_path, _ = compose_reel([card_path], reel_path, duration=REEL_DURATION)
 
         if DRY_RUN:
-            print("\n  DRY RUN - skipping post")
-            print(f"  Caption preview: {ig_caption[:200]}")
-            print(f"  Track name     : {track_name}")
+            print("\n  DRY RUN — skipping post")
+            print(f"  Caption preview:\n{ig_caption}")
         else:
             print("  Posting Reel to Instagram...")
-            url = post_reel(reel_path, ig_caption, audio_name=track_name)
+            url = post_reel(reel_path, ig_caption)
             print(f"\n  POSTED: {url}")
             Path(card_path).unlink(missing_ok=True)
             Path(reel_path).unlink(missing_ok=True)
             print("  Cleaned up local files.")
 
         print(f"\n{'='*60}")
-        print(f"  Pipeline complete - {datetime.now().strftime('%H:%M:%S')}")
+        print(f"  Pipeline complete — {datetime.now().strftime('%H:%M:%S')}")
         print(f"{'='*60}\n")
 
     except Exception as exc:
@@ -280,7 +231,7 @@ def run_pipeline() -> None:
         print(f"  Message    : {exc}")
         print(f"{'!'*60}")
         print(traceback.format_exc())
-        print("  Run aborted - no post was made.\n")
+        print("  Run aborted — no post was made.\n")
         sys.exit(1)
 
 

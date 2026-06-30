@@ -143,25 +143,12 @@ def _create_reel_container(token: str, video_url: str, caption: str, audio_name:
 
 
 def post_reel(video_path: str, caption: str, audio_name: str | None = None) -> str:
-    token              = _get_token()
+    token     = _get_token()
     video_url, _ = _host_video(video_path)
 
-    container_id: str | None = None
-    for audio in ([audio_name] if audio_name else []) + [None]:
-        label = f'"{audio}"' if audio else "no audio"
-        print(f"  [instagram] Creating Reel container — audio: {label}...")
-        try:
-            container_id = _create_reel_container(token, video_url, caption, audio)
-            print(f"  [instagram] Container: {container_id}")
-            break
-        except RuntimeError as exc:
-            if "audio" in str(exc).lower() and audio is not None:
-                print(f"  [instagram] Audio {label} not accepted — trying without...")
-                continue
-            raise
-
-    if container_id is None:
-        raise RuntimeError("[instagram] Could not create Reel container")
+    print("  [instagram] Creating Reel container...")
+    container_id = _create_reel_container(token, video_url, caption, audio_name=None)
+    print(f"  [instagram] Container: {container_id}")
 
     for attempt in range(30):
         time.sleep(10)
