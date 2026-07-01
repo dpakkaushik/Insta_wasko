@@ -140,6 +140,27 @@ def compose_reel(
         ) from exc
 
 
+def _transcode_to_h264(src: str) -> str:
+    """Re-encode video to H.264/AAC MP4 using ffmpeg subprocess before MoviePy reads it."""
+    import subprocess, tempfile, os
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+    tmp.close()
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", src,
+         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+         "-c:a", "aac", "-b:a", "128k",
+         tmp.name],
+        capture_output=True
+    )
+    if result.returncode == 0:
+        print(f"  [video] Transcoded to H.264: {Path(src).name}")
+        return tmp.name
+    os.unlink(tmp.name)
+    raise RuntimeError(
+        f"ffmpeg transcode failed for {src}:\n{result.stderr.decode()[-400:]}"
+    )
+
+
 def compose_reel_with_video_bg(
     card_path: str,
     video_bg_path: str,
@@ -149,9 +170,10 @@ def compose_reel_with_video_bg(
 ) -> tuple[str, None]:
     """
     Main path:
-      1. Load video bg (10 s), loop to 30 s, crop to 1080×1920
-      2. Overlay text card at 80% opacity
-      3. Mix bg's original audio + random 30-second sample from the category's audio dir
+      1. Transcode video bg to H.264 (handles HEVC/any codec)
+      2. Load, loop to 30 s, crop to 1080×1920
+      3. Overlay text card at 80% opacity
+      4. Mix bg's original audio + random 30-second sample from the category's audio dir
     """
     try:
         from moviepy.audio.AudioClip import CompositeAudioClip
@@ -172,8 +194,10 @@ def compose_reel_with_video_bg(
     TARGET_W, TARGET_H = 1080, 1920
 
     print(f"  [video] Video background: {Path(video_bg_path).name}")
+    tmp_path = None
     try:
-        bg = VideoFileClip(video_bg_path)
+        tmp_path = _transcode_to_h264(video_bg_path)
+        bg = VideoFileClip(tmp_path)
 
         # Ping-pong (boomerang) loop to fill the reel duration: forward, then
         # reversed, then forward, etc. Always seamless at each loop boundary
@@ -245,3 +269,7 @@ def compose_reel_with_video_bg(
         raise RuntimeError(
             f"[video] Video-bg reel failed: {type(exc).__name__}: {exc}"
         ) from exc
+    finally:
+        import os
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
