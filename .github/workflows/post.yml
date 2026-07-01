@@ -1,14 +1,7 @@
 name: Post to Instagram
 
 on:
-  schedule:
-    - cron: '30 2 * * *'   #  8:00 AM IST
-    - cron: '30 6 * * *'   # 12:00 PM IST
-    - cron: '30 10 * * *'  #  4:00 PM IST
-    - cron: '30 14 * * *'  #  8:00 PM IST
-    - cron: '30 18 * * *'  # 12:00 AM IST
-    - cron: '30 22 * * *'  #  4:00 AM IST
-  workflow_dispatch:        # manual trigger from GitHub UI
+  workflow_dispatch:        # manual trigger only — schedule paused
 
 jobs:
   post:
