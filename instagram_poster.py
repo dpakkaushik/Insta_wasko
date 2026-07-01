@@ -147,7 +147,7 @@ def post_reel(video_path: str, caption: str, audio_name: str | None = None) -> s
     video_url, _ = _host_video(video_path)
 
     print("  [instagram] Creating Reel container...")
-    container_id = _create_reel_container(token, video_url, caption, audio_name=None)
+    container_id = _create_reel_container(token, video_url, caption, audio_name=audio_name)
     print(f"  [instagram] Container: {container_id}")
 
     for attempt in range(30):

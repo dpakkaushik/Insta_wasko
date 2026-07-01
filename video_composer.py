@@ -51,7 +51,7 @@ def _pick_audio() -> str | None:
     chosen = random.choice(pool)
     _save_audio_history(chosen.name)
     print(f"  [audio] Track: {chosen.name}")
-    return str(chosen)
+    return str(chosen), chosen.stem
 
 
 def compose_reel(
@@ -75,8 +75,10 @@ def compose_reel(
         video  = concatenate_videoclips(clips, method="compose")
         target = video.duration
 
-        audio_path = _pick_audio()
-        if audio_path:
+        audio_name = None
+        result = _pick_audio()
+        if result:
+            audio_path, audio_name = result
             try:
                 raw       = AudioFileClip(audio_path)
                 max_start = max(0.0, raw.duration - target)
@@ -95,7 +97,7 @@ def compose_reel(
             logger=None,
         )
         print(f"  [video] Saved: {output_path}")
-        return output_path, None
+        return output_path, audio_name
     except Exception as exc:
         raise RuntimeError(
             f"[video] Reel composition failed: {type(exc).__name__}: {exc}\n"
@@ -161,8 +163,10 @@ def compose_reel_with_video_bg(
         if bg_audio is not None:
             audio_tracks.append(bg_audio)
 
-        music_path = _pick_audio()
-        if music_path:
+        audio_name = None
+        result = _pick_audio()
+        if result:
+            music_path, audio_name = result
             try:
                 raw       = AudioFileClip(music_path)
                 max_start = max(0.0, raw.duration - duration)
@@ -187,7 +191,7 @@ def compose_reel_with_video_bg(
             logger=None,
         )
         print(f"  [video] Saved: {output_path}")
-        return output_path, None
+        return output_path, audio_name
 
     except Exception as exc:
         raise RuntimeError(

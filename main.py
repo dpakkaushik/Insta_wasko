@@ -199,19 +199,19 @@ def run_pipeline() -> None:
 
         print("\n[4/4] Composing Reel video...")
         if video_bg:
-            reel_path, _ = compose_reel_with_video_bg(
+            reel_path, audio_name = compose_reel_with_video_bg(
                 card_path, video_bg, reel_path, duration=REEL_DURATION
             )
         else:
             print("  No video background found — using gradient card only")
-            reel_path, _ = compose_reel([card_path], reel_path, duration=REEL_DURATION)
+            reel_path, audio_name = compose_reel([card_path], reel_path, duration=REEL_DURATION)
 
         if DRY_RUN:
             print("\n  DRY RUN — skipping post")
             print(f"  Caption preview:\n{ig_caption}")
         else:
             print("  Posting Reel to Instagram...")
-            url = post_reel(reel_path, ig_caption)
+            url = post_reel(reel_path, ig_caption, audio_name=audio_name)
             print(f"\n  POSTED: {url}")
             Path(card_path).unlink(missing_ok=True)
             Path(reel_path).unlink(missing_ok=True)
