@@ -39,14 +39,29 @@ DRY_RUN       = "--dry" in sys.argv
 REEL_DURATION = 30.0
 
 # ── Content categories — girl-only content, one category per content bank ──────
-# Add more entries here as new categories are introduced.
+# Add every category here as it's created, whether or not it's live yet.
 CATEGORY_CONFIG = {
     "annoyed": {
         "oneliner_file": Path("content/annoyed_one_liners.txt"),
         "used_file":     Path("content/annoyed_one_liners_used.txt"),
         "video_dir":     Path("video/annoyed"),
     },
+    "swag": {
+        "oneliner_file": Path("content/swag_one_liners.txt"),
+        "used_file":     Path("content/swag_one_liners_used.txt"),
+        "video_dir":     Path("video/swag"),
+    },
+    "savage": {
+        "oneliner_file": Path("content/savage_one_liners.txt"),
+        "used_file":     Path("content/savage_one_liners_used.txt"),
+        "video_dir":     Path("video/savage"),
+    },
 }
+
+# Categories the random picker (and Telegram "category: " prefix) can actually
+# choose from. A category can exist in CATEGORY_CONFIG before its video/audio
+# is ready — just don't list it here until it should go live.
+ACTIVE_CATEGORIES = ["annoyed"]
 
 
 def _get_arg_value(flag: str) -> str | None:
@@ -59,16 +74,17 @@ def _get_arg_value(flag: str) -> str | None:
 
 # Manual override — e.g. from the Telegram listener workflow. Skips the random
 # picker and posts this exact text instead. Optionally prefixed "category: "
-# to target a specific category; otherwise falls back to the first category.
+# to target a specific active category; otherwise falls back to the first
+# active category.
 CUSTOM_TEXT = (os.environ.get("CUSTOM_TEXT", "").strip()) or _get_arg_value("--text")
 
 
 def _resolve_custom_text(raw_text: str) -> tuple[str, str]:
     """Parse an optional "category: text" prefix out of a manual override."""
     match = re.match(r"^\s*([a-zA-Z_]+)\s*:\s*(.+)$", raw_text, re.DOTALL)
-    if match and match.group(1).lower() in CATEGORY_CONFIG:
+    if match and match.group(1).lower() in ACTIVE_CATEGORIES:
         return match.group(1).lower(), match.group(2).strip()
-    return next(iter(CATEGORY_CONFIG)), raw_text.strip()
+    return ACTIVE_CATEGORIES[0], raw_text.strip()
 
 
 def _read_lines(path: Path) -> list[str]:
@@ -122,7 +138,7 @@ def run_pipeline() -> None:
     if CUSTOM_TEXT:
         category, text = _resolve_custom_text(CUSTOM_TEXT)
     else:
-        category = random.choice(list(CATEGORY_CONFIG))
+        category = random.choice(ACTIVE_CATEGORIES)
         text     = None  # picked in STEP 1 below
     cfg = CATEGORY_CONFIG[category]
 
