@@ -199,20 +199,11 @@ def run_pipeline() -> None:
 
         print("\n[4/4] Composing Reel video...")
         if video_bg:
-            try:
-                reel_path, audio_name = compose_reel_with_video_bg(
-                    card_path, video_bg, reel_path, cfg["audio_dir"], duration=REEL_DURATION
-                )
-            except RuntimeError as e:
-                print(f"  ⚠️  Video background failed ({e}) — falling back to gradient")
-                reel_path, audio_name = compose_reel(
-                    [card_path], reel_path, cfg["audio_dir"], duration=REEL_DURATION
-                )
-        else:
-            print("  No video background found — using gradient card only")
-            reel_path, audio_name = compose_reel(
-                [card_path], reel_path, cfg["audio_dir"], duration=REEL_DURATION
+            reel_path, audio_name = compose_reel_with_video_bg(
+                card_path, video_bg, reel_path, cfg["audio_dir"], duration=REEL_DURATION
             )
+        else:
+            raise RuntimeError(f"No video found in {cfg['video_dir']} — add a video before posting.")
 
         if DRY_RUN:
             print("\n  DRY RUN — skipping post")
