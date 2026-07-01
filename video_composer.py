@@ -57,15 +57,32 @@ def _pick_audio(audio_dir: Path) -> tuple[str, str] | None:
     return str(chosen), chosen.stem
 
 
+def _make_gradient_bg(width: int = 1080, height: int = 1920) -> "PIL.Image.Image":
+    """Create a vertical gradient background image."""
+    import PIL.Image as PILImage
+    import PIL.ImageDraw as PILImageDraw
+    top    = (30, 20, 50)    # deep purple
+    bottom = (90, 40, 120)   # violet
+    img    = PILImage.new("RGB", (width, height))
+    draw   = PILImageDraw.Draw(img)
+    for y in range(height):
+        t = y / height
+        r = int(top[0] + (bottom[0] - top[0]) * t)
+        g = int(top[1] + (bottom[1] - top[1]) * t)
+        b = int(top[2] + (bottom[2] - top[2]) * t)
+        draw.line([(0, y), (width, y)], fill=(r, g, b))
+    return img
+
+
 def compose_reel(
     image_paths: list[str],
     output_path: str,
     audio_dir: Path,
     duration: float | None = None,
 ) -> tuple[str, None]:
-    """Fallback: still images + random audio sample (no video bg)."""
+    """Fallback: gradient bg + text card + random audio (no video bg)."""
     try:
-        from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips
+        from moviepy.editor import AudioFileClip, CompositeVideoClip, ImageClip, concatenate_videoclips
     except ImportError as exc:
         raise RuntimeError(
             "[video] moviepy is not installed. Run: pip install moviepy\n"
@@ -73,9 +90,22 @@ def compose_reel(
         ) from exc
 
     slide_dur = duration if duration is not None else 3.0
-    print(f"  [video] Composing {len(image_paths)} slide(s) × {slide_dur}s each...")
+    print(f"  [video] Composing {len(image_paths)} slide(s) × {slide_dur}s each (gradient bg)...")
     try:
-        clips  = [ImageClip(p).set_duration(slide_dur) for p in image_paths]
+        import tempfile, os
+        # Save gradient bg as a temp image and composite with each card
+        grad = _make_gradient_bg()
+        tmp  = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        grad.save(tmp.name)
+        tmp.close()
+
+        clips = []
+        for p in image_paths:
+            bg   = ImageClip(tmp.name).set_duration(slide_dur)
+            card = ImageClip(p).set_duration(slide_dur)
+            clips.append(CompositeVideoClip([bg, card]))
+        os.unlink(tmp.name)
+
         video  = concatenate_videoclips(clips, method="compose")
         target = video.duration
 
