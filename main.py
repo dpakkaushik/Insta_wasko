@@ -62,15 +62,10 @@ CATEGORY_CONFIG = {
 # Categories the random picker (and Telegram "category: " prefix) can actually
 # choose from. A category can exist in CATEGORY_CONFIG before its video/audio
 # is ready — just don't list it here until it should go live.
-ACTIVE_CATEGORIES = ["annoyed", "swag"]
+ACTIVE_CATEGORIES = ["swag"]
 
-# Relative share of scheduled posts per category. Categories not listed here
-# default to weight 1. Only applies to the random picker — Telegram's
-# "category: " override always posts to the category you name regardless of
-# its weight.
 CATEGORY_WEIGHTS = {
-    "annoyed": 80,
-    "swag":    20,
+    "swag": 100,
 }
 
 for _cfg in CATEGORY_CONFIG.values():
