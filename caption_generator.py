@@ -10,7 +10,6 @@ Caption structure:
   Hook (<125 chars, visible before Instagram "...more")
   CTA  (save/tag nudge)
   9 hashtags
-  #N (post number — added by main.py)
 """
 
 import json
@@ -24,90 +23,21 @@ _groq           = Groq(api_key=GROQ_API_KEY)
 GROQ_TEXT_MODEL = "llama-3.3-70b-versatile"
 
 CATEGORY_LABELS: dict[str, str] = {
-    # Male
-    "desi_household_and_relatives":  "Desi Household & Relatives",
-    "creative_breakdown_and_editor": "Creative Breakdown & Editor",
-    "group_chats_and_goa_plans":     "Group Chats & Goa Plans",
-    "traffic_and_driving":           "Traffic & Driving",
-    "dating_and_relationships":      "Dating & Relationships",
-    "online_shopping_addiction":     "Online Shopping Addiction",
-    "extreme_laziness_and_sleep":    "Extreme Laziness & Sleep",
-    "gym_diet_and_delusions":        "Gym Diet & Delusions",
-    # Female
-    "girl_math_and_shopping":   "Girl Math & Shopping",
-    "skincare_and_makeup":      "Skincare & Makeup",
-    "besties_and_gossip":       "Besties & Gossip",
-    "dating_and_delulu":        "Dating & Delulu",
-    "mood_swings_and_pms":      "Mood Swings & Overthinking",
-    "adulting_and_survival":    "Adulting & Everyday Survival",
+    "annoyed": "Annoyed & Overthinking Girl Problems",
 }
 
 # Curated niche tags per category (< 500K posts, high-signal for the algorithm).
 # Groq picks 3 from the list that best match the specific one-liner.
 NICHE_TAG_BANKS: dict[str, list[str]] = {
-    "desi_household_and_relatives": [
-        "#GharKaScene", "#DesiMoms", "#IndianParents", "#RishtedaarProblems",
-        "#DesiFamily", "#GharWaliLife", "#IndianHousehold", "#TupperwareMom",
-    ],
-    "creative_breakdown_and_editor": [
-        "#VideoEditorLife", "#DesignStruggle", "#CreativeBlock", "#EditorProblems",
-        "#FreelancerLife", "#IndianCreatives", "#MotionDesigner", "#AfterEffectsLife",
-    ],
-    "group_chats_and_goa_plans": [
-        "#GoaPlans", "#GroupChatDrama", "#DostiyaanWali", "#CancelledPlans",
-        "#IndianFriendGroup", "#WhatsappGroup", "#YaariDostaana", "#BestieProblems",
-    ],
-    "traffic_and_driving": [
-        "#IndianTraffic", "#OlaUberProblems", "#DrivingInIndia", "#RoadRageIndia",
-        "#MetroLife", "#DelhiTraffic", "#MumbaiTraffic", "#HornOKPlease",
-    ],
-    "dating_and_relationships": [
-        "#TalkingStage", "#DesiDating", "#IndianCrush", "#RelationshipDesi",
-        "#BollywoodLove", "#SingleInIndia", "#DatingInIndia", "#RedFlagsDesi",
-    ],
-    "online_shopping_addiction": [
-        "#MyntraAddict", "#AmazonIndia", "#OnlineShoppingIndia", "#SaleHaiTohKharido",
-        "#CartAbandonment", "#FreeDelivery", "#ShoppingAddict", "#FlipkartSale",
-    ],
-    "extreme_laziness_and_sleep": [
-        "#SnoozeButton", "#SonaHaiMujhe", "#NahanaNahiHai", "#BedLife",
-        "#GharPeBaithe", "#ProcrastinationKing", "#AalsiLife", "#NeendMeraDharm",
-    ],
-    "gym_diet_and_delusions": [
-        "#GymProblems", "#DietCheating", "#ProteinPowder", "#FitnessDelusion",
-        "#LegDaySkipped", "#CheatDay", "#IndianGymLife", "#BicepsKahan",
-    ],
-    "girl_math_and_shopping": [
-        "#GirlMath", "#MyntraSale", "#ShoppingLogic", "#WardrobeProblems",
-        "#FashionStruggle", "#IndianShopaholic", "#SaleKaFanda", "#ZaraSale",
-    ],
-    "skincare_and_makeup": [
-        "#SkincareIndia", "#EyelinerStruggle", "#IndianMakeup", "#GlassSkinGoal",
-        "#MakeupLover", "#IndianSkincare", "#MeszyBun", "#LipBalm",
-    ],
-    "besties_and_gossip": [
-        "#BestieGoals", "#GroupChatGossip", "#DesiGirlGang", "#BestfriendProblems",
-        "#GossipSession", "#IndianBesties", "#WashoomTalk", "#GirlTalk",
-    ],
-    "dating_and_delulu": [
-        "#DelululIsTheSolulu", "#RedFlagsIgnored", "#TalkingStageGirl",
-        "#DesiGirlDating", "#ICanFixHim", "#BollywoodDelusion", "#GreenFlags",
-    ],
-    "mood_swings_and_pms": [
-        "#PMSProblems", "#MoodSwingLife", "#OverthinkerClub", "#GirlMoods",
-        "#EmotionalDesi", "#PeriodProblems", "#IndianGirlOverthinker", "#TherapyNeeded",
-    ],
-    "adulting_and_survival": [
-        "#AdultingIsHard", "#GharKaKhana", "#IndependentWoman", "#BraOff",
-        "#AdultingProblems", "#WFHLife", "#IndianAdulting", "#SpotifyPlaylist",
+    "annoyed": [
+        "#AnnoyedAF", "#GirlMath", "#OverthinkerClub", "#BestieProblems",
+        "#DelululIsTheSolulu", "#SkincareIndia", "#AdultingIsHard", "#MoodSwingLife",
     ],
 }
 
 # Mid-size community tags (500K–10M) — shared across all posts
-MID_TAGS_MALE   = ["#DesiHumor", "#IndianMillennials", "#RelatableContent",
-                   "#HinglishMemes", "#BachpanKiYaadein", "#IndianMemesCommunity"]
-MID_TAGS_FEMALE = ["#DesiGirls", "#IndianWomenHumor", "#RelatableGirl",
-                   "#HinglishGirls", "#IndianGirlThings", "#DesiWomenMemes"]
+MID_TAGS = ["#DesiGirls", "#IndianWomenHumor", "#RelatableGirl",
+            "#HinglishGirls", "#IndianGirlThings", "#DesiWomenMemes"]
 
 # Broad reach tags (10M+) — paired to avoid overlap
 BROAD_TAGS = ["#IndianMemes", "#Hinglish", "#DesiProblems",
@@ -116,25 +46,23 @@ BROAD_TAGS = ["#IndianMemes", "#Hinglish", "#DesiProblems",
 FALLBACK: dict[str, str] = {
     "hook":           "Yaar yeh toh bilkul main hoon! 😂",
     "cta":            "Screenshot karo aur tag karo uss dost ko jo yeh hai.",
-    "niche_hashtags": "#GharKaScene #DesiHumor #RelatableContent",
-    "mid_hashtags":   "#IndianMillennials #HinglishMemes #BachpanKiYaadein",
+    "niche_hashtags": "#AnnoyedAF #GirlMath #OverthinkerClub",
+    "mid_hashtags":   "#DesiGirls #HinglishGirls #IndianGirlThings",
     "broad_hashtags": "#IndianMemes #Hinglish #DesiProblems",
     "search_keyword": "relatable desi content",
     "alt_text":       "Relatable Hinglish comedy one-liner",
 }
 
 
-def _build_prompt(text: str, label: str, niche_bank: list[str], gender: str) -> str:
-    mid_pool  = MID_TAGS_MALE if gender == "male" else MID_TAGS_FEMALE
+def _build_prompt(text: str, label: str, niche_bank: list[str]) -> str:
     niche_str = " ".join(niche_bank)
-    mid_str   = " ".join(mid_pool)
+    mid_str   = " ".join(MID_TAGS)
     broad_str = " ".join(BROAD_TAGS)
 
-    return f"""You are an Instagram growth strategist for a viral Hinglish comedy page targeting Indian millennials.
+    return f"""You are an Instagram growth strategist for a viral Hinglish comedy page targeting Indian women and girls.
 
 ONE-LINER: {text}
 CATEGORY: {label}
-GENDER AUDIENCE: {gender}
 
 Write a caption and 3-tier hashtag set to maximize Reel reach.
 
@@ -167,12 +95,10 @@ Output ONLY valid JSON, no markdown:
 }}"""
 
 
-def generate_caption_for_oneliner(
-    text: str, category: str, number: int, gender: str = "male"
-) -> dict:
+def generate_caption_for_oneliner(text: str, category: str = "annoyed") -> dict:
     label      = CATEGORY_LABELS.get(category, category.replace("_", " ").title())
-    niche_bank = NICHE_TAG_BANKS.get(category, ["#DesiHumor", "#RelatableContent", "#IndianMemes"])
-    prompt     = _build_prompt(text, label, niche_bank, gender)
+    niche_bank = NICHE_TAG_BANKS.get(category, ["#DesiGirls", "#RelatableContent", "#IndianMemes"])
+    prompt     = _build_prompt(text, label, niche_bank)
 
     for attempt in range(1, 4):
         print(f"  [groq] Caption attempt {attempt}...")
@@ -197,7 +123,7 @@ def generate_caption_for_oneliner(
             if not all(k in data for k in ("hook", "cta", "niche_hashtags")):
                 raise ValueError(f"Missing fields: {list(data.keys())}")
 
-            print(f"  [groq] Caption OK for #{number}")
+            print(f"  [groq] Caption OK")
             return data
 
         except Exception as exc:
