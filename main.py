@@ -32,8 +32,6 @@ from instagram_poster import post_reel
 OUTPUT_DIR = Path("output")
 
 OUTPUT_DIR.mkdir(exist_ok=True)
-Path("audio").mkdir(exist_ok=True)
-Path("content").mkdir(exist_ok=True)
 
 DRY_RUN       = "--dry" in sys.argv
 REEL_DURATION = 30.0
@@ -45,23 +43,40 @@ CATEGORY_CONFIG = {
         "oneliner_file": Path("content/annoyed_one_liners.txt"),
         "used_file":     Path("content/annoyed_one_liners_used.txt"),
         "video_dir":     Path("video/annoyed"),
+        "audio_dir":     Path("audio/annoyed"),
     },
     "swag": {
         "oneliner_file": Path("content/swag_one_liners.txt"),
         "used_file":     Path("content/swag_one_liners_used.txt"),
         "video_dir":     Path("video/swag"),
+        "audio_dir":     Path("audio/swag"),
     },
     "savage": {
         "oneliner_file": Path("content/savage_one_liners.txt"),
         "used_file":     Path("content/savage_one_liners_used.txt"),
         "video_dir":     Path("video/savage"),
+        "audio_dir":     Path("audio/savage"),
     },
 }
 
 # Categories the random picker (and Telegram "category: " prefix) can actually
 # choose from. A category can exist in CATEGORY_CONFIG before its video/audio
 # is ready — just don't list it here until it should go live.
-ACTIVE_CATEGORIES = ["annoyed"]
+ACTIVE_CATEGORIES = ["annoyed", "swag"]
+
+# Relative share of scheduled posts per category. Categories not listed here
+# default to weight 1. Only applies to the random picker — Telegram's
+# "category: " override always posts to the category you name regardless of
+# its weight.
+CATEGORY_WEIGHTS = {
+    "annoyed": 80,
+    "swag":    20,
+}
+
+for _cfg in CATEGORY_CONFIG.values():
+    _cfg["video_dir"].mkdir(parents=True, exist_ok=True)
+    _cfg["audio_dir"].mkdir(parents=True, exist_ok=True)
+    _cfg["oneliner_file"].parent.mkdir(parents=True, exist_ok=True)
 
 
 def _get_arg_value(flag: str) -> str | None:
@@ -138,7 +153,8 @@ def run_pipeline() -> None:
     if CUSTOM_TEXT:
         category, text = _resolve_custom_text(CUSTOM_TEXT)
     else:
-        category = random.choice(ACTIVE_CATEGORIES)
+        weights  = [CATEGORY_WEIGHTS.get(c, 1) for c in ACTIVE_CATEGORIES]
+        category = random.choices(ACTIVE_CATEGORIES, weights=weights, k=1)[0]
         text     = None  # picked in STEP 1 below
     cfg = CATEGORY_CONFIG[category]
 
@@ -189,11 +205,13 @@ def run_pipeline() -> None:
         print("\n[4/4] Composing Reel video...")
         if video_bg:
             reel_path, audio_name = compose_reel_with_video_bg(
-                card_path, video_bg, reel_path, duration=REEL_DURATION
+                card_path, video_bg, reel_path, cfg["audio_dir"], duration=REEL_DURATION
             )
         else:
             print("  No video background found — using gradient card only")
-            reel_path, audio_name = compose_reel([card_path], reel_path, duration=REEL_DURATION)
+            reel_path, audio_name = compose_reel(
+                [card_path], reel_path, cfg["audio_dir"], duration=REEL_DURATION
+            )
 
         if DRY_RUN:
             print("\n  DRY RUN — skipping post")

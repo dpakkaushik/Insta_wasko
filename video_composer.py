@@ -15,41 +15,44 @@ import PIL.Image
 if not hasattr(PIL.Image, "ANTIALIAS"):
     PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
 
-OUTPUT_FPS         = 30
-AUDIO_DIR          = Path("audio")
-AUDIO_HISTORY_FILE = Path("audio_history.json")
-AUDIO_NO_REPEAT    = 3
+OUTPUT_FPS      = 30
+AUDIO_NO_REPEAT = 3
 
 
-def _load_audio_history() -> list[str]:
-    if AUDIO_HISTORY_FILE.exists():
-        return json.loads(AUDIO_HISTORY_FILE.read_text())
+def _history_file(audio_dir: Path) -> Path:
+    return Path(f"audio_history_{audio_dir.name}.json")
+
+
+def _load_audio_history(audio_dir: Path) -> list[str]:
+    history_file = _history_file(audio_dir)
+    if history_file.exists():
+        return json.loads(history_file.read_text())
     return []
 
 
-def _save_audio_history(track_name: str) -> None:
-    history = _load_audio_history()
+def _save_audio_history(audio_dir: Path, track_name: str) -> None:
+    history = _load_audio_history(audio_dir)
     history.insert(0, track_name)
-    AUDIO_HISTORY_FILE.write_text(json.dumps(history[:AUDIO_NO_REPEAT]))
+    _history_file(audio_dir).write_text(json.dumps(history[:AUDIO_NO_REPEAT]))
 
 
-def _pick_audio() -> str | None:
-    if not AUDIO_DIR.exists():
+def _pick_audio(audio_dir: Path) -> tuple[str, str] | None:
+    if not audio_dir.exists():
         return None
     tracks = (
-        list(AUDIO_DIR.glob("*.mp3"))
-        + list(AUDIO_DIR.glob("*.m4a"))
-        + list(AUDIO_DIR.glob("*.wav"))
+        list(audio_dir.glob("*.mp3"))
+        + list(audio_dir.glob("*.m4a"))
+        + list(audio_dir.glob("*.wav"))
     )
     if not tracks:
         return None
-    history  = _load_audio_history()
+    history  = _load_audio_history(audio_dir)
     excluded = set(history[:AUDIO_NO_REPEAT])
     pool     = [t for t in tracks if t.name not in excluded]
     if not pool:
         pool = tracks  # all recently used — reset
     chosen = random.choice(pool)
-    _save_audio_history(chosen.name)
+    _save_audio_history(audio_dir, chosen.name)
     print(f"  [audio] Track: {chosen.name}")
     return str(chosen), chosen.stem
 
@@ -57,6 +60,7 @@ def _pick_audio() -> str | None:
 def compose_reel(
     image_paths: list[str],
     output_path: str,
+    audio_dir: Path,
     duration: float | None = None,
 ) -> tuple[str, None]:
     """Fallback: still images + random audio sample (no video bg)."""
@@ -76,7 +80,7 @@ def compose_reel(
         target = video.duration
 
         audio_name = None
-        result = _pick_audio()
+        result = _pick_audio(audio_dir)
         if result:
             audio_path, audio_name = result
             try:
@@ -109,13 +113,14 @@ def compose_reel_with_video_bg(
     card_path: str,
     video_bg_path: str,
     output_path: str,
+    audio_dir: Path,
     duration: float = 30.0,
 ) -> tuple[str, None]:
     """
     Main path:
       1. Load video bg (10 s), loop to 30 s, crop to 1080×1920
       2. Overlay text card at 80% opacity
-      3. Mix bg's original audio + random 30-second sample from audio/
+      3. Mix bg's original audio + random 30-second sample from the category's audio dir
     """
     try:
         from moviepy.audio.AudioClip import CompositeAudioClip
@@ -126,6 +131,7 @@ def compose_reel_with_video_bg(
             VideoFileClip,
             concatenate_videoclips,
         )
+        from moviepy.video.fx.all import time_mirror
     except ImportError as exc:
         raise RuntimeError(
             "[video] moviepy is not installed. Run: pip install moviepy\n"
@@ -138,10 +144,20 @@ def compose_reel_with_video_bg(
     try:
         bg = VideoFileClip(video_bg_path)
 
-        # Loop 10-second bg to fill 30 seconds
+        # Ping-pong (boomerang) loop to fill the reel duration: forward, then
+        # reversed, then forward, etc. Always seamless at each loop boundary
+        # (frame + audio) since a reversed clip always returns exactly to its
+        # starting frame — unlike a straight repeat, which jump-cuts if the
+        # clip wasn't authored as a perfect loop. time_mirror() reverses both
+        # the video and its audio track together, so they stay in sync.
         if bg.duration < duration:
-            loops = int(duration / bg.duration) + 1
-            bg = concatenate_videoclips([bg] * loops)
+            forward, backward = bg, bg.fx(time_mirror)
+            segments, total, use_forward = [], 0.0, True
+            while total < duration:
+                segments.append(forward if use_forward else backward)
+                total += bg.duration
+                use_forward = not use_forward
+            bg = concatenate_videoclips(segments)
         bg = bg.subclip(0, duration)
 
         # Snapshot audio before resize/crop can silently drop it
@@ -164,7 +180,7 @@ def compose_reel_with_video_bg(
             audio_tracks.append(bg_audio)
 
         audio_name = None
-        result = _pick_audio()
+        result = _pick_audio(audio_dir)
         if result:
             music_path, audio_name = result
             try:

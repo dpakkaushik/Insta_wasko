@@ -5,7 +5,7 @@ output/
 templates/
 category_history.json
 template_history.json
-audio_history.json
+audio_history_*.json
 __pycache__/
 *.pyc
 chrome_profile/
