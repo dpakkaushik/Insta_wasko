@@ -115,9 +115,10 @@ def compose_reel(
             audio_path, audio_name = result
             try:
                 raw       = AudioFileClip(audio_path)
-                max_start = max(0.0, raw.duration - target)
+                use_dur   = min(target, raw.duration)
+                max_start = max(0.0, raw.duration - use_dur)
                 start     = random.uniform(0, max_start)
-                music     = raw.subclip(start, start + target).audio_fadeout(1.5)
+                music     = raw.subclip(start, start + use_dur).audio_fadeout(1.5)
                 video     = video.set_audio(music)
             except Exception as exc:
                 print(f"  [video] WARNING: audio failed ({exc}) — posting silent")
@@ -215,11 +216,12 @@ def compose_reel_with_video_bg(
             music_path, audio_name = result
             try:
                 raw       = AudioFileClip(music_path)
-                max_start = max(0.0, raw.duration - duration)
+                use_dur   = min(duration, raw.duration)
+                max_start = max(0.0, raw.duration - use_dur)
                 start     = random.uniform(0, max_start)
-                music     = raw.subclip(start, start + duration).audio_fadeout(1.5)
+                music     = raw.subclip(start, start + use_dur).audio_fadeout(1.5)
                 audio_tracks.append(music)
-                print(f"  [audio] Sample: {start:.1f}s – {start + duration:.1f}s")
+                print(f"  [audio] Sample: {start:.1f}s – {start + use_dur:.1f}s")
             except Exception as exc:
                 print(f"  [video] WARNING: music failed ({exc}) — using bg audio only")
 
