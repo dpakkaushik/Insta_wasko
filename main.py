@@ -62,10 +62,11 @@ CATEGORY_CONFIG = {
 # Categories the random picker (and Telegram "category: " prefix) can actually
 # choose from. A category can exist in CATEGORY_CONFIG before its video/audio
 # is ready — just don't list it here until it should go live.
-ACTIVE_CATEGORIES = ["swag"]
+ACTIVE_CATEGORIES = ["annoyed", "swag"]
 
 CATEGORY_WEIGHTS = {
-    "swag": 100,
+    "annoyed": 80,
+    "swag":    20,
 }
 
 for _cfg in CATEGORY_CONFIG.values():
