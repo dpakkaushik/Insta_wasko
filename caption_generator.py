@@ -45,13 +45,23 @@ NICHE_TAG_BANKS: dict[str, list[str]] = {
     ],
 }
 
-# Mid-size community tags (500K–10M) — shared across all posts
+# Mid-size community tags (500K–10M) — shared across all posts. Groq picks 3
+# of these per post; a bigger pool means fewer identical hashtag sets across
+# consecutive posts (repetition is a known reach-killer on Instagram).
 MID_TAGS = ["#DesiGirls", "#IndianWomenHumor", "#RelatableGirl",
-            "#HinglishGirls", "#IndianGirlThings", "#DesiWomenMemes"]
+            "#HinglishGirls", "#IndianGirlThings", "#DesiWomenMemes",
+            "#IndianGirlProblems", "#DesiMemesDaily", "#GirlHumor",
+            "#DesiVibes", "#GirlsWhoRelate", "#IndianGirlGang",
+            "#RelatableMemes", "#DesiCreators"]
 
-# Broad reach tags (10M+) — paired to avoid overlap
+# Broad reach tags (10M+) — paired to avoid overlap. Includes proven
+# high-discovery/virality tags (#Reels, #ExplorePage, #Viral, #Trending)
+# alongside the niche-adjacent broad tags.
 BROAD_TAGS = ["#IndianMemes", "#Hinglish", "#DesiProblems",
-              "#IndianComedy", "#DesiContent", "#IndianReels"]
+              "#IndianComedy", "#DesiContent", "#IndianReels",
+              "#Reels", "#ReelsInstagram", "#ExplorePage",
+              "#Viral", "#Trending", "#ReelItFeelIt",
+              "#InstagramReels", "#Explore"]
 
 FALLBACK: dict[str, str] = {
     "hook":           "Yaar yeh toh bilkul main hoon! 😂",
