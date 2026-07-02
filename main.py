@@ -190,12 +190,18 @@ def run_pipeline() -> None:
         print(f"  Saved: {Path(card_path).name}")
 
         # STEP 4 — compose reel (video bg if available) + post
-        # Caption: hook → CTA → 9 dynamic hashtags + 2 fixed viral/relatable tags
-        FIXED_TAGS = "#ReelItFeelIt #ExplorePage"
+        # Caption: hook → CTA → 9 dynamic hashtags + 2 random viral tags
+        VIRAL_TAG_POOL = [
+            "#ReelItFeelIt", "#ExplorePage", "#Viral", "#Trending",
+            "#FunnyReels", "#RelatableContent", "#ComedyReels", "#ViralReels",
+            "#TooRelatable", "#MoodOfTheDay", "#JustGirlThings", "#GirlProblems",
+            "#ReelsIndia", "#ReelKaro", "#InstagramReels", "#ForYouPage",
+        ]
+        viral_tags = " ".join(random.sample(VIRAL_TAG_POOL, 2))
         ig_caption = (
             f"{hook}\n\n"
             f"{cta}\n\n"
-            f"{niche_ht} {mid_ht} {broad_ht} {FIXED_TAGS}"
+            f"{niche_ht} {mid_ht} {broad_ht} {viral_tags}"
         )
         reel_path = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
         video_bg  = _pick_video_bg(cfg["video_dir"])
