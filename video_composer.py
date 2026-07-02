@@ -1,6 +1,8 @@
 """
 Compose a 30-second MP4 Reel using pure ffmpeg subprocess:
-  - Video background looped to fill 30 s, center-cropped to 9:16
+  - Video background ping-ponged (boomerang: forward, reversed, forward...) to
+    fill 30 s, center-cropped to 9:16 — always seamless at the loop boundary
+    since a reversed clip returns exactly to its starting frame
   - Semi-transparent text card overlaid (RGBA alpha-blended)
   - Random 30-second sample from audio/ mixed in with fade-out
   - No-repeat: same track won't play again for the next 3 runs
@@ -70,6 +72,50 @@ def _audio_duration(path: str) -> float:
         return REEL_DURATION
 
 
+def _has_audio_stream(path: str) -> bool:
+    result = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=codec_type", "-of", "csv=p=0", path],
+        capture_output=True, text=True,
+    )
+    return bool(result.stdout.strip())
+
+
+def _build_pingpong_unit(video_bg_path: str, tmp_path: str) -> str:
+    """
+    Build a forward+reversed 'boomerang' clip (video and audio reversed
+    together, in sync) so it can be stream-looped with a guaranteed-seamless
+    boundary, regardless of whether the source clip loops cleanly on its own.
+    """
+    has_audio = _has_audio_stream(video_bg_path)
+    if has_audio:
+        fc = (
+            "[0:v]split[v1][v2];[v2]reverse[v2r];"
+            "[0:a]asplit[a1][a2];[a2]areverse[a2r];"
+            "[v1][a1][v2r][a2r]concat=n=2:v=1:a=1[v][a]"
+        )
+        maps = ["-map", "[v]", "-map", "[a]"]
+        audio_codec = ["-c:a", "aac"]
+    else:
+        fc = "[0:v]split[v1][v2];[v2]reverse[v2r];[v1][v2r]concat=n=2:v=1:a=0[v]"
+        maps = ["-map", "[v]"]
+        audio_codec = []
+
+    cmd = [
+        "ffmpeg", "-y", "-i", video_bg_path,
+        "-filter_complex", fc,
+        *maps,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+        *audio_codec,
+        tmp_path,
+    ]
+    proc = subprocess.run(cmd, capture_output=True)
+    if proc.returncode != 0:
+        stderr = proc.stderr.decode(errors="replace")
+        raise RuntimeError(f"[video] ping-pong build failed:\n{stderr[-800:]}")
+    return tmp_path
+
+
 # ── Main composition ───────────────────────────────────────────────────────────
 
 def compose_reel_with_video_bg(
@@ -83,7 +129,8 @@ def compose_reel_with_video_bg(
     Compose the final reel using pure ffmpeg subprocess — no MoviePy.
 
     Inputs:
-      [0] video background, stream-looped to fill `duration`
+      [0] video background, ping-ponged (boomerang) and stream-looped to fill
+          `duration` — guaranteed seamless at the loop boundary
       [1] card PNG (RGBA), looped as static image
       [2] optional music track (random sample)
 
@@ -92,9 +139,12 @@ def compose_reel_with_video_bg(
     """
     print(f"  [video] Background: {Path(video_bg_path).name}")
 
+    pingpong_path = str(Path(output_path).with_name(f"_pingpong_{Path(output_path).stem}.mp4"))
+    _build_pingpong_unit(video_bg_path, pingpong_path)
+
     cmd = [
         "ffmpeg", "-y",
-        "-stream_loop", "-1", "-t", str(duration), "-i", video_bg_path,
+        "-stream_loop", "-1", "-t", str(duration), "-i", pingpong_path,
         "-loop", "1",          "-t", str(duration), "-i", card_path,
     ]
 
@@ -138,12 +188,15 @@ def compose_reel_with_video_bg(
         output_path,
     ]
 
-    proc = subprocess.run(cmd, capture_output=True)
-    if proc.returncode != 0:
-        stderr = proc.stderr.decode(errors="replace")
-        raise RuntimeError(
-            f"[video] ffmpeg composition failed:\n{stderr[-800:]}"
-        )
+    try:
+        proc = subprocess.run(cmd, capture_output=True)
+        if proc.returncode != 0:
+            stderr = proc.stderr.decode(errors="replace")
+            raise RuntimeError(
+                f"[video] ffmpeg composition failed:\n{stderr[-800:]}"
+            )
+    finally:
+        Path(pingpong_path).unlink(missing_ok=True)
 
     print(f"  [video] Saved: {output_path}")
     return output_path, audio_name
