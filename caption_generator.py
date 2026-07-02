@@ -63,7 +63,8 @@ BROAD_TAGS = ["#GirlsOfInstagram", "#IndianGirl", "#DesiGirl",
               "#GirlPower", "#InstaGirls", "#IndianWomen",
               "#GirlGang", "#GirlBoss", "#WomenOfIndia",
               "#DesiWomen", "#QueenVibes", "#GirlSquad",
-              "#IndianGirlsClub", "#DesiQueens"]
+              "#PakistaniGirl", "#PakistaniWomen",
+              "#SouthAsianGirl", "#DesiGirlsUnite"]
 
 FALLBACK: dict[str, str] = {
     "hook":           "Yaar yeh toh bilkul main hoon! 😂",
@@ -81,7 +82,7 @@ def _build_prompt(text: str, label: str, niche_bank: list[str]) -> str:
     mid_str   = " ".join(MID_TAGS)
     broad_str = " ".join(BROAD_TAGS)
 
-    return f"""You are an Instagram growth strategist for a viral Hinglish comedy page targeting Indian women and girls.
+    return f"""You are an Instagram growth strategist for a viral Hinglish comedy page targeting Indian and Pakistani women and girls (Hindi-Urdu-English mixed captions land well with both audiences).
 
 ONE-LINER: {text}
 CATEGORY: {label}
