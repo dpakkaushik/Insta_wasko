@@ -47,5 +47,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add audio_history*.json content/swag_one_liners.txt content/swag_one_liners_used.txt content/annoyed_one_liners.txt content/annoyed_one_liners_used.txt ig_token.json || true
+          git add audio_history*.json content/annoyed_one_liners.txt content/annoyed_one_liners_used.txt content/swag_one_liners.txt content/swag_one_liners_used.txt content/savage_one_liners.txt content/savage_one_liners_used.txt ig_token.json || true
           git diff --cached --quiet || (git commit -m "chore: update history after run [skip ci]" && git push)
