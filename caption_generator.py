@@ -57,15 +57,16 @@ MID_TAGS = ["#DesiGirls", "#DesiWomenHumor", "#RelatableGirl",
             "#DesiGirlVibes", "#GirlsWhoRelate", "#DesiGirlGang",
             "#RelatableGirlMemes", "#DesiGirlSquad"]
 
-# Broad reach tags (10M+) — all girl/women-themed and region-neutral (no
+# Broad reach tags (10M+) — girl/women-themed and region-neutral (no
 # country names), so the same tags land naturally for both Indian and
-# Pakistani viewers. Includes some of the highest-volume girl-specific tags
-# on Instagram (#GirlsOfInstagram, #GirlPower, #GirlBoss) for reach without
-# drifting into generic tags unrelated to the content.
+# Pakistani viewers, PLUS a handful of general virality/discovery tags
+# (#Reels, #ExplorePage, #Viral, #Trending, #ReelItFeelIt) that push
+# Reels into the Explore page regardless of niche.
 BROAD_TAGS = ["#GirlsOfInstagram", "#DesiGirl", "#GirlPower", "#InstaGirls",
               "#GirlGang", "#GirlBoss", "#DesiWomen", "#QueenVibes",
               "#GirlSquad", "#SouthAsianGirl", "#DesiGirlsUnite", "#DesiBabe",
-              "#DesiDiva", "#WomenEmpowerment", "#DesiBeauty", "#GirlEnergy"]
+              "#DesiDiva", "#WomenEmpowerment", "#DesiBeauty", "#GirlEnergy",
+              "#Reels", "#ExplorePage", "#Viral", "#Trending", "#ReelItFeelIt"]
 
 FALLBACK: dict[str, str] = {
     "hook":           "Yaar yeh toh bilkul main hoon! 😂",
