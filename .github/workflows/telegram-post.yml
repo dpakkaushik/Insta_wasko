@@ -1,9 +1,7 @@
 name: Telegram-triggered Post
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'   # check Telegram every 5 minutes
-  workflow_dispatch:         # manual trigger from GitHub UI
+  workflow_dispatch:         # manual trigger from GitHub UI only
 
 jobs:
   check-and-post:
