@@ -45,23 +45,25 @@ NICHE_TAG_BANKS: dict[str, list[str]] = {
     ],
 }
 
-# Mid-size community tags (500K–10M) — shared across all posts. Groq picks 3
-# of these per post; a bigger pool means fewer identical hashtag sets across
-# consecutive posts (repetition is a known reach-killer on Instagram).
+# Mid-size community tags (500K–10M) — shared across all posts, all
+# girl/women-themed to match the content. Groq picks 3 per post; a bigger
+# pool means fewer identical hashtag sets across consecutive posts
+# (repetition is a known reach-killer on Instagram).
 MID_TAGS = ["#DesiGirls", "#IndianWomenHumor", "#RelatableGirl",
             "#HinglishGirls", "#IndianGirlThings", "#DesiWomenMemes",
-            "#IndianGirlProblems", "#DesiMemesDaily", "#GirlHumor",
-            "#DesiVibes", "#GirlsWhoRelate", "#IndianGirlGang",
-            "#RelatableMemes", "#DesiCreators"]
+            "#IndianGirlProblems", "#DesiGirlMemes", "#GirlHumor",
+            "#DesiGirlVibes", "#GirlsWhoRelate", "#IndianGirlGang",
+            "#RelatableGirlMemes", "#IndianGirlSquad"]
 
-# Broad reach tags (10M+) — paired to avoid overlap. Includes proven
-# high-discovery/virality tags (#Reels, #ExplorePage, #Viral, #Trending)
-# alongside the niche-adjacent broad tags.
-BROAD_TAGS = ["#IndianMemes", "#Hinglish", "#DesiProblems",
-              "#IndianComedy", "#DesiContent", "#IndianReels",
-              "#Reels", "#ReelsInstagram", "#ExplorePage",
-              "#Viral", "#Trending", "#ReelItFeelIt",
-              "#InstagramReels", "#Explore"]
+# Broad reach tags (10M+) — all girl/women-themed. Includes some of the
+# highest-volume girl-specific tags on Instagram (#GirlsOfInstagram,
+# #GirlPower, #GirlBoss) for maximum reach without drifting off-niche into
+# generic tags unrelated to the content (e.g. plain #Reels or #Viral).
+BROAD_TAGS = ["#GirlsOfInstagram", "#IndianGirl", "#DesiGirl",
+              "#GirlPower", "#InstaGirls", "#IndianWomen",
+              "#GirlGang", "#GirlBoss", "#WomenOfIndia",
+              "#DesiWomen", "#QueenVibes", "#GirlSquad",
+              "#IndianGirlsClub", "#DesiQueens"]
 
 FALLBACK: dict[str, str] = {
     "hook":           "Yaar yeh toh bilkul main hoon! 😂",
