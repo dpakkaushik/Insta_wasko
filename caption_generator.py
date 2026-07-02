@@ -33,10 +33,10 @@ CATEGORY_LABELS: dict[str, str] = {
 NICHE_TAG_BANKS: dict[str, list[str]] = {
     "annoyed": [
         "#AnnoyedAF", "#GirlMath", "#OverthinkerClub", "#BestieProblems",
-        "#DelululIsTheSolulu", "#SkincareIndia", "#AdultingIsHard", "#MoodSwingLife",
+        "#DelululIsTheSolulu", "#DesiSkincare", "#AdultingIsHard", "#MoodSwingLife",
     ],
     "swag": [
-        "#SwagGirl", "#MainCharacterEnergy", "#BossBabeIndia", "#ConfidentGirl",
+        "#SwagGirl", "#MainCharacterEnergy", "#DesiBossBabe", "#ConfidentGirl",
         "#GlowUpSeason", "#DesiSwag", "#IndependentGirl", "#ThatGirlVibes",
     ],
     "savage": [
@@ -48,30 +48,31 @@ NICHE_TAG_BANKS: dict[str, list[str]] = {
 # Mid-size community tags (500K–10M) — shared across all posts, all
 # girl/women-themed to match the content. Groq picks 3 per post; a bigger
 # pool means fewer identical hashtag sets across consecutive posts
-# (repetition is a known reach-killer on Instagram).
-MID_TAGS = ["#DesiGirls", "#IndianWomenHumor", "#RelatableGirl",
-            "#HinglishGirls", "#IndianGirlThings", "#DesiWomenMemes",
-            "#IndianGirlProblems", "#DesiGirlMemes", "#GirlHumor",
-            "#DesiGirlVibes", "#GirlsWhoRelate", "#IndianGirlGang",
-            "#RelatableGirlMemes", "#IndianGirlSquad"]
+# (repetition is a known reach-killer on Instagram). Kept region-neutral
+# ("Desi" rather than naming a specific country) so it reads well across
+# both Indian and Pakistani audiences.
+MID_TAGS = ["#DesiGirls", "#DesiWomenHumor", "#RelatableGirl",
+            "#HinglishGirls", "#DesiGirlThings", "#DesiWomenMemes",
+            "#DesiGirlProblems", "#DesiGirlMemes", "#GirlHumor",
+            "#DesiGirlVibes", "#GirlsWhoRelate", "#DesiGirlGang",
+            "#RelatableGirlMemes", "#DesiGirlSquad"]
 
-# Broad reach tags (10M+) — all girl/women-themed. Includes some of the
-# highest-volume girl-specific tags on Instagram (#GirlsOfInstagram,
-# #GirlPower, #GirlBoss) for maximum reach without drifting off-niche into
-# generic tags unrelated to the content (e.g. plain #Reels or #Viral).
-BROAD_TAGS = ["#GirlsOfInstagram", "#IndianGirl", "#DesiGirl",
-              "#GirlPower", "#InstaGirls", "#IndianWomen",
-              "#GirlGang", "#GirlBoss", "#WomenOfIndia",
-              "#DesiWomen", "#QueenVibes", "#GirlSquad",
-              "#PakistaniGirl", "#PakistaniWomen",
-              "#SouthAsianGirl", "#DesiGirlsUnite"]
+# Broad reach tags (10M+) — all girl/women-themed and region-neutral (no
+# country names), so the same tags land naturally for both Indian and
+# Pakistani viewers. Includes some of the highest-volume girl-specific tags
+# on Instagram (#GirlsOfInstagram, #GirlPower, #GirlBoss) for reach without
+# drifting into generic tags unrelated to the content.
+BROAD_TAGS = ["#GirlsOfInstagram", "#DesiGirl", "#GirlPower", "#InstaGirls",
+              "#GirlGang", "#GirlBoss", "#DesiWomen", "#QueenVibes",
+              "#GirlSquad", "#SouthAsianGirl", "#DesiGirlsUnite", "#DesiBabe",
+              "#DesiDiva", "#WomenEmpowerment", "#DesiBeauty", "#GirlEnergy"]
 
 FALLBACK: dict[str, str] = {
     "hook":           "Yaar yeh toh bilkul main hoon! 😂",
     "cta":            "Screenshot karo aur tag karo uss dost ko jo yeh hai.",
     "niche_hashtags": "#AnnoyedAF #GirlMath #OverthinkerClub",
-    "mid_hashtags":   "#DesiGirls #HinglishGirls #IndianGirlThings",
-    "broad_hashtags": "#IndianMemes #Hinglish #DesiProblems",
+    "mid_hashtags":   "#DesiGirls #HinglishGirls #DesiGirlThings",
+    "broad_hashtags": "#GirlsOfInstagram #GirlPower #DesiWomen",
     "search_keyword": "relatable desi content",
     "alt_text":       "Relatable Hinglish comedy one-liner",
 }
