@@ -19,9 +19,10 @@ from dotenv import load_dotenv
 
 load_dotenv(override=False)
 
-BOT_TOKEN   = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-CHAT_ID     = os.getenv("TELEGRAM_CHAT_ID", "").strip()
-OFFSET_FILE = Path("telegram_offset.json")
+BOT_TOKEN    = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+CHAT_ID      = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+OFFSET_FILE  = Path(os.getenv("TELEGRAM_OFFSET_FILE", "telegram_offset.json"))
+POLL_SECONDS = int(os.getenv("TELEGRAM_POLL_SECONDS", "0") or "0")
 
 
 def _load_last_update_id() -> int:
@@ -45,6 +46,16 @@ def _write_github_output(has_message: bool, message: str = "") -> None:
         f.write("TELEGRAM_EOF\n")
 
 
+def _fetch_updates(last_id: int) -> list[dict]:
+    resp = requests.get(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates",
+        params={"offset": last_id + 1, "timeout": POLL_SECONDS},
+        timeout=max(15, POLL_SECONDS + 10),
+    )
+    resp.raise_for_status()
+    return resp.json().get("result", [])
+
+
 def main() -> None:
     if not BOT_TOKEN or not CHAT_ID:
         print("[telegram] TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping")
@@ -52,13 +63,12 @@ def main() -> None:
         return
 
     last_id = _load_last_update_id()
-    resp = requests.get(
-        f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates",
-        params={"offset": last_id + 1, "timeout": 0},
-        timeout=15,
-    )
-    resp.raise_for_status()
-    updates = resp.json().get("result", [])
+    print(f"[telegram] Offset file: {OFFSET_FILE} | last_update_id={last_id}")
+    if POLL_SECONDS:
+        print(f"[telegram] Waiting up to {POLL_SECONDS}s for a new update")
+
+    updates = _fetch_updates(last_id)
+    print(f"[telegram] Updates received: {len(updates)}")
 
     if not updates:
         print("[telegram] No new updates")
