@@ -26,7 +26,7 @@ CATEGORY_LABELS: dict[str, str] = {
     "annoyed":        "Annoyed & Overthinking Girl Problems",
     "swag":           "Confident Swag Girl Vibes",
     "savage":         "Savage & Unbothered Girl Energy",
-    "main_character": "Aesthetic Main Character Girl Energy",
+    "main":           "Aesthetic Main Character Girl Energy",
 }
 
 # Curated niche tags per category (< 500K posts, high-signal for the algorithm).
@@ -44,7 +44,7 @@ NICHE_TAG_BANKS: dict[str, list[str]] = {
         "#SavageGirl", "#UnbotheredQueen", "#NoChill", "#SelfRespectFirst",
         "#BoundaryQueen", "#ChaosGirl", "#ToxicFreeLife", "#NoFilterZone",
     ],
-    "main_character": [
+    "main": [
         "#MainCharacterEnergy", "#ThatGirlVibes", "#SoftGirlEra", "#ConfidentGirl",
         "#GlowUpSeason", "#DesiDiva", "#PrettyGirlMindset", "#CinematicLife",
     ],

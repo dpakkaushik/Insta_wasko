@@ -57,7 +57,7 @@ CATEGORY_CONFIG = {
         "video_dir":     Path("video/savage"),
         "audio_dir":     Path("audio/savage"),
     },
-    "main_character": {
+    "main": {
         "oneliner_file": Path("content/main_character_one_liners.txt"),
         "used_file":     Path("content/main_character_one_liners_used.txt"),
         "video_dir":     Path("video/main_character"),
@@ -68,13 +68,13 @@ CATEGORY_CONFIG = {
 # Categories the random picker (and Telegram "category: " prefix) can actually
 # choose from. A category can exist in CATEGORY_CONFIG before its video/audio
 # is ready — just don't list it here until it should go live.
-ACTIVE_CATEGORIES = ["annoyed", "swag", "savage", "main_character"]
+ACTIVE_CATEGORIES = ["annoyed", "swag", "savage", "main"]
 
 CATEGORY_WEIGHTS = {
     "annoyed":        45,
     "swag":           20,
     "savage":         20,
-    "main_character": 15,
+    "main":    15,
 }
 
 for _cfg in CATEGORY_CONFIG.values():

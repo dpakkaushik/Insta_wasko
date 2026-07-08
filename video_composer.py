@@ -140,11 +140,11 @@ def compose_reel_with_video_bg(
     """
     print(f"  [video] Background: {Path(video_bg_path).name}")
 
-    preserve_video = category == "main_character"
+    preserve_video = category in ("main", "main_character")
     pingpong_path = None
 
     if preserve_video:
-        print("  [video] main_character: using uploaded video without ping-pong/scale/crop")
+        print("  [video] main: using uploaded video without ping-pong/scale/crop")
         bg_input_path = video_bg_path
     else:
         pingpong_path = str(Path(output_path).with_name(f"_pingpong_{Path(output_path).stem}.mp4"))
