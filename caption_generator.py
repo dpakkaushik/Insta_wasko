@@ -23,9 +23,10 @@ _groq           = Groq(api_key=GROQ_API_KEY)
 GROQ_TEXT_MODEL = "llama-3.3-70b-versatile"
 
 CATEGORY_LABELS: dict[str, str] = {
-    "annoyed": "Annoyed & Overthinking Girl Problems",
-    "swag":    "Confident Swag Girl Vibes",
-    "savage":  "Savage & Unbothered Girl Energy",
+    "annoyed":        "Annoyed & Overthinking Girl Problems",
+    "swag":           "Confident Swag Girl Vibes",
+    "savage":         "Savage & Unbothered Girl Energy",
+    "main_character": "Aesthetic Main Character Girl Energy",
 }
 
 # Curated niche tags per category (< 500K posts, high-signal for the algorithm).
@@ -42,6 +43,10 @@ NICHE_TAG_BANKS: dict[str, list[str]] = {
     "savage": [
         "#SavageGirl", "#UnbotheredQueen", "#NoChill", "#SelfRespectFirst",
         "#BoundaryQueen", "#ChaosGirl", "#ToxicFreeLife", "#NoFilterZone",
+    ],
+    "main_character": [
+        "#MainCharacterEnergy", "#ThatGirlVibes", "#SoftGirlEra", "#ConfidentGirl",
+        "#GlowUpSeason", "#DesiDiva", "#PrettyGirlMindset", "#CinematicLife",
     ],
 }
 
