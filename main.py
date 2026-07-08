@@ -216,7 +216,8 @@ def run_pipeline() -> None:
         print("\n[4/4] Composing Reel video...")
         if video_bg:
             reel_path, audio_name = compose_reel_with_video_bg(
-                card_path, video_bg, reel_path, cfg["audio_dir"], duration=REEL_DURATION
+                card_path, video_bg, reel_path, cfg["audio_dir"],
+                duration=REEL_DURATION, category=category,
             )
         else:
             raise RuntimeError(f"No video found in {cfg['video_dir']} — add a video before posting.")

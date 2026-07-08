@@ -124,6 +124,7 @@ def compose_reel_with_video_bg(
     output_path: str,
     audio_dir: Path,
     duration: float = REEL_DURATION,
+    category: str | None = None,
 ) -> tuple[str, str | None]:
     """
     Compose the final reel using pure ffmpeg subprocess — no MoviePy.
@@ -139,12 +140,20 @@ def compose_reel_with_video_bg(
     """
     print(f"  [video] Background: {Path(video_bg_path).name}")
 
-    pingpong_path = str(Path(output_path).with_name(f"_pingpong_{Path(output_path).stem}.mp4"))
-    _build_pingpong_unit(video_bg_path, pingpong_path)
+    preserve_video = category == "main_character"
+    pingpong_path = None
+
+    if preserve_video:
+        print("  [video] main_character: using uploaded video without ping-pong/scale/crop")
+        bg_input_path = video_bg_path
+    else:
+        pingpong_path = str(Path(output_path).with_name(f"_pingpong_{Path(output_path).stem}.mp4"))
+        _build_pingpong_unit(video_bg_path, pingpong_path)
+        bg_input_path = pingpong_path
 
     cmd = [
         "ffmpeg", "-y",
-        "-stream_loop", "-1", "-t", str(duration), "-i", pingpong_path,
+        "-stream_loop", "-1", "-t", str(duration), "-i", bg_input_path,
         "-loop", "1",          "-t", str(duration), "-i", card_path,
     ]
 
@@ -164,12 +173,15 @@ def compose_reel_with_video_bg(
         cmd += ["-ss", str(start), "-t", str(use_dur), "-i", music_path]
         music_idx = 2
 
-    # Scale bg to fill frame, crop to exact 9:16, overlay RGBA card
-    fc = (
-        f"[0:v]scale={TARGET_W}:{TARGET_H}:force_original_aspect_ratio=increase,"
-        f"crop={TARGET_W}:{TARGET_H},setsar=1[bg];"
-        f"[bg][1:v]overlay=0:0:format=auto[v]"
-    )
+    if preserve_video:
+        fc = "[0:v]setsar=1[bg];[bg][1:v]overlay=0:0:format=auto[v]"
+    else:
+        # Scale bg to fill frame, crop to exact 9:16, overlay RGBA card
+        fc = (
+            f"[0:v]scale={TARGET_W}:{TARGET_H}:force_original_aspect_ratio=increase,"
+            f"crop={TARGET_W}:{TARGET_H},setsar=1[bg];"
+            f"[bg][1:v]overlay=0:0:format=auto[v]"
+        )
     if music_idx is not None:
         fc += f";[{music_idx}:a]afade=t=out:st={fade_start:.2f}:d=1.5[aout]"
         audio_map = ["-map", "[aout]"]
@@ -196,7 +208,8 @@ def compose_reel_with_video_bg(
                 f"[video] ffmpeg composition failed:\n{stderr[-800:]}"
             )
     finally:
-        Path(pingpong_path).unlink(missing_ok=True)
+        if pingpong_path:
+            Path(pingpong_path).unlink(missing_ok=True)
 
     print(f"  [video] Saved: {output_path}")
     return output_path, audio_name
