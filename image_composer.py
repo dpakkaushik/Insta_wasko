@@ -32,7 +32,12 @@ def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFon
     return lines
 
 
-def compose_card(quote: str, font_color: tuple, **kwargs) -> Image.Image:
+def compose_card(
+    quote: str,
+    font_color: tuple,
+    y_start: int = Y_START,
+    **kwargs,
+) -> Image.Image:
     """Return a transparent RGBA image with just the text — no background card."""
     canvas = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
     draw   = ImageDraw.Draw(canvas)
@@ -42,7 +47,7 @@ def compose_card(quote: str, font_color: tuple, **kwargs) -> Image.Image:
 
     lines  = _wrap_text(draw, quote, font)
     line_h = 74
-    y      = Y_START
+    y      = y_start
 
     for line in lines:
         # white shadow so black text reads on dark backgrounds too

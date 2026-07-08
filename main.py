@@ -191,7 +191,12 @@ def run_pipeline() -> None:
 
         # STEP 3 — render text as transparent PNG overlay
         print("\n[3/4] Composing text overlay...")
-        card      = compose_card(quote=text, font_color=(0, 0, 0))
+        text_y_start = int(1920 * 0.15) if category == "main" else None
+        card      = compose_card(
+            quote=text,
+            font_color=(0, 0, 0),
+            **({"y_start": text_y_start} if text_y_start is not None else {}),
+        )
         card_path = str(OUTPUT_DIR / f"card_{run_id}.png")
         card.save(card_path, "PNG")
         print(f"  Saved: {Path(card_path).name}")
