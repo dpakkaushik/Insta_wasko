@@ -90,7 +90,7 @@ Append new lines (one one-liner per line, no numbering) to `content/annoyed_one_
 |------|---------|
 | `main.py` | Entry point — category selection, pipeline orchestration |
 | `caption_generator.py` | Groq caption + hashtag generation |
-| `image_composer.py` | Text rendered on gradient card (1080×1920) |
+| `image_composer.py` | English text rendered on transparent card (1080×1920); emoji drawn as color glyphs via pilmoji |
 | `video_composer.py` | Card + video bg → MP4 reel with audio |
 | `instagram_poster.py` | Instagram Graph API posting |
 | `config.py` | API keys and settings |
