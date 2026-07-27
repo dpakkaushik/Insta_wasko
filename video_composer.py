@@ -4,7 +4,8 @@ Compose a 30-second MP4 Reel using pure ffmpeg subprocess:
     fill 30 s, center-cropped to 9:16 — always seamless at the loop boundary
     since a reversed clip returns exactly to its starting frame
   - Semi-transparent text card overlaid (RGBA alpha-blended)
-  - Random 30-second sample from audio/ mixed in with fade-out
+  - Random 30-second sample from audio/ mixed in with fade-out, on top of the
+    background video's own audio (if it has any)
   - No-repeat: same track won't play again for the next 3 runs
 """
 
@@ -182,7 +183,19 @@ def compose_reel_with_video_bg(
             f"crop={TARGET_W}:{TARGET_H},setsar=1[bg];"
             f"[bg][1:v]overlay=0:0:format=auto[v]"
         )
-    if music_idx is not None:
+    # Audio: background video's own sound + music track, summed at full level
+    # (normalize=0 matches the old MoviePy CompositeAudioClip behaviour, which
+    # summed tracks instead of halving them).
+    bg_has_audio = _has_audio_stream(bg_input_path)
+
+    if music_idx is not None and bg_has_audio:
+        fc += (
+            f";[{music_idx}:a]afade=t=out:st={fade_start:.2f}:d=1.5[music]"
+            f";[0:a][music]amix=inputs=2:duration=first"
+            f":dropout_transition=0:normalize=0[aout]"
+        )
+        audio_map = ["-map", "[aout]"]
+    elif music_idx is not None:
         fc += f";[{music_idx}:a]afade=t=out:st={fade_start:.2f}:d=1.5[aout]"
         audio_map = ["-map", "[aout]"]
     else:
