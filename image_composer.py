@@ -55,17 +55,29 @@ def _line_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFo
 
 def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont,
                pilmoji=None) -> list[str]:
-    words, lines, current = text.split(), [], ""
-    for word in words:
-        test = (current + " " + word).strip()
-        if _line_width(draw, test, font, pilmoji) <= TEXT_WIDTH:
-            current = test
-        else:
-            if current:
-                lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
+    """Wrap text for the card.
+
+    Explicit line breaks (\\n) in the source are honored as hard breaks, and
+    each resulting segment is still width-wrapped so a long line can't run off
+    the card. Blank lines are preserved as vertical spacing.
+    """
+    lines = []
+    for segment in text.splitlines():
+        # A blank source line becomes an empty rendered line (vertical gap).
+        if not segment.strip():
+            lines.append("")
+            continue
+        current = ""
+        for word in segment.split():
+            test = (current + " " + word).strip()
+            if _line_width(draw, test, font, pilmoji) <= TEXT_WIDTH:
+                current = test
+            else:
+                if current:
+                    lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
     return lines
 
 
